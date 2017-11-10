@@ -182,7 +182,7 @@ contract ShackToken is owned, TokenERC20 {
     uint8   public termYears;
     uint24  public shackFee=111;  // % of shack Fee with XXX decimal places, teken from decimals
     address        shackFeeAddress; // Address to send fees 
-    uint24  public timestampCreated; // to save timestamp when the contract was created
+    uint256 public timestampCreated; // to save timestamp when the contract was created
 
     mapping (address => bool) public frozenAccount;
 
@@ -192,15 +192,16 @@ contract ShackToken is owned, TokenERC20 {
     /* Initializes contract with initial supply tokens to the creator of the contract */
     function ShackToken(
         uint256 initialSupply,
-        uint8   years,
+	uint8   decimalPositions,
+        uint8   yearsTerm,
         string tokenName,
         string tokenSymbol,
         address shackFeeAddr
-    ) TokenERC20(initialSupply, tokenName, tokenSymbol) public {
-        require(years == 10 || years == 20 || years == 30);
-        termYears = years;
+    ) TokenERC20(initialSupply, tokenName, tokenSymbol, decimalPositions) public {
+        require(yearsTerm == 10 || yearsTerm == 20 || yearsTerm == 30);
+        termYears = yearsTerm;
         shackFeeAddress = shackFeeAddr;
-        timestampCreated = now
+        timestampCreated = now;
     }
 
     /* Internal transfer, only can be called by this contract */
@@ -242,18 +243,18 @@ contract ShackToken is owned, TokenERC20 {
     }
 
     /// @param newFee users pay from each purchase
-    function setPrices(uint24 newFee) onlyOwner public {
-        fee = newFee
+    function setFees(uint24 newFee) onlyOwner public {
+        shackFee = newFee;
     }
 
     /// returns feeAmount based on amount parameters and fee percentage
-    function feeAmount(uint256 amount) onlyOwner public returns (uint256 feeAmount){
-        return msg.value / 100 * fee
+    function feeAmount(uint256 amount) public returns (uint256){
+        return amount / 100 * shackFee;
     }
 
     /// returns timestamp when contract was created
-    function termStarted() onlyOwner public returns (uint256 timestamp){
-        return timestampCreated
+    function termStarted() public returns (uint256){
+        return timestampCreated;
     }
 
 
