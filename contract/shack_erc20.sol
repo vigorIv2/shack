@@ -45,8 +45,10 @@ contract TokenERC20 {
     function TokenERC20(
         uint256 initialSupply,
         string tokenName,
-        string tokenSymbol
+        string tokenSymbol,
+        uint8 decimalPositions
     ) public {
+	decimals = decimalPositions;
         totalSupply = initialSupply * 10 ** uint256(decimals);  // Update total supply with the decimal amount
         balanceOf[msg.sender] = totalSupply;                // Give the creator all initial tokens
         name = tokenName;                                   // Set the name for display purposes
@@ -177,7 +179,8 @@ contract ShackToken is owned, TokenERC20 {
 
     uint256 public sellPrice;
     uint256 public buyPrice;
-    uint256 public termMonths;
+    uint8   public termYears;
+    uint24  public shackFee=111;  // % of shack Fee with XXX decimal places, teken from decimals
 
     mapping (address => bool) public frozenAccount;
 
@@ -187,11 +190,14 @@ contract ShackToken is owned, TokenERC20 {
     /* Initializes contract with initial supply tokens to the creator of the contract */
     function ShackToken(
         uint256 initialSupply,
-        uint256 months,
+        uint8   years,
+        uint24  fee,
         string tokenName,
         string tokenSymbol
     ) TokenERC20(initialSupply, tokenName, tokenSymbol) public {
-        termMonths = months;
+	require(years == 10 || years == 20 || years == 30);
+        termYears = years;
+        shackFee = fee;
     }
 
     /* Internal transfer, only can be called by this contract */
