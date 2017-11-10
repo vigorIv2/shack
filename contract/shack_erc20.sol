@@ -48,7 +48,7 @@ contract TokenERC20 {
         string tokenSymbol,
         uint8 decimalPositions
     ) public {
-	decimals = decimalPositions;
+        decimals = decimalPositions;
         totalSupply = initialSupply * 10 ** uint256(decimals);  // Update total supply with the decimal amount
         balanceOf[msg.sender] = totalSupply;                // Give the creator all initial tokens
         name = tokenName;                                   // Set the name for display purposes
@@ -181,6 +181,8 @@ contract ShackToken is owned, TokenERC20 {
     uint256 public buyPrice;
     uint8   public termYears;
     uint24  public shackFee=111;  // % of shack Fee with XXX decimal places, teken from decimals
+    address        shackFeeAddress; // Address to send fees 
+    uint24  public timestampCreated; // to save timestamp when the contract was created
 
     mapping (address => bool) public frozenAccount;
 
@@ -191,13 +193,14 @@ contract ShackToken is owned, TokenERC20 {
     function ShackToken(
         uint256 initialSupply,
         uint8   years,
-        uint24  fee,
         string tokenName,
-        string tokenSymbol
+        string tokenSymbol,
+        address shackFeeAddr
     ) TokenERC20(initialSupply, tokenName, tokenSymbol) public {
-	require(years == 10 || years == 20 || years == 30);
+        require(years == 10 || years == 20 || years == 30);
         termYears = years;
-        shackFee = fee;
+        shackFeeAddress = shackFeeAddr;
+        timestampCreated = now
     }
 
     /* Internal transfer, only can be called by this contract */
@@ -238,17 +241,36 @@ contract ShackToken is owned, TokenERC20 {
         buyPrice = newBuyPrice;
     }
 
+    /// @param newFee users pay from each purchase
+    function setPrices(uint24 newFee) onlyOwner public {
+        fee = newFee
+    }
+
+    /// returns feeAmount based on amount parameters and fee percentage
+    function feeAmount(uint256 amount) onlyOwner public returns (uint256 feeAmount){
+        return msg.value / 100 * fee
+    }
+
+    /// returns timestamp when contract was created
+    function termStarted() onlyOwner public returns (uint256 timestamp){
+        return timestampCreated
+    }
+
+
     /// @notice Buy tokens from contract by sending ether
     function buy() payable public {
-        uint amount = msg.value / buyPrice;               // calculates the amount
+        uint256 feeAmt = feeAmount(msg.value);
+        uint amount = (msg.value - feeAmt) / buyPrice;               // calculates the amount
+        _transfer(msg.sender, shackFeeAddress, feeAmt);              // makes the fee transfers
         _transfer(this, msg.sender, amount);              // makes the transfers
     }
 
     /// @notice Sell `amount` tokens to contract
     /// @param amount amount of tokens to be sold
     function sell(uint256 amount) public {
+        uint256 feeAmt = feeAmount(amount * sellPrice);
         require(this.balance >= amount * sellPrice);      // checks if the contract has enough ether to buy
-        _transfer(msg.sender, this, amount);              // makes the transfers
-        msg.sender.transfer(amount * sellPrice);          // sends ether to the seller. It's important to do this last to avoid recursion attacks
+        _transfer(msg.sender, this, amount);              // makes the transfers subtracting fee
+        msg.sender.transfer(amount * sellPrice - feeAmt);          // sends ether to the seller. It's important to do this last to avoid recursion attacks
     }
 }
