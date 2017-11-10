@@ -177,10 +177,10 @@ contract TokenERC20 {
 
 contract ShackToken is owned, TokenERC20 {
 
-    uint256 public sellPrice;
-    uint256 public buyPrice;
+    uint256 public sellPrice = 300000000;
+    uint256 public buyPrice = 300000000;
     uint8   public termYears;
-    uint24  public shackFee=111;  // % of shack Fee with XXX decimal places, teken from decimals
+    uint24  public shackFee=1110000;  // % of shack Fee with XXX decimal places, teken from decimals
     address        shackFeeAddress; // Address to send fees 
     uint256 public timestampCreated; // to save timestamp when the contract was created
 
@@ -192,7 +192,7 @@ contract ShackToken is owned, TokenERC20 {
     /* Initializes contract with initial supply tokens to the creator of the contract */
     function ShackToken(
         uint256 initialSupply,
-	uint8   decimalPositions,
+        uint8   decimalPositions,
         uint8   yearsTerm,
         string tokenName,
         string tokenSymbol,
@@ -248,15 +248,9 @@ contract ShackToken is owned, TokenERC20 {
     }
 
     /// returns feeAmount based on amount parameters and fee percentage
-    function feeAmount(uint256 amount) public returns (uint256){
+    function feeAmount(uint256 amount) private view returns (uint256){
         return amount / 100 * shackFee;
     }
-
-    /// returns timestamp when contract was created
-    function termStarted() public returns (uint256){
-        return timestampCreated;
-    }
-
 
     /// @notice Buy tokens from contract by sending ether
     function buy() payable public {
