@@ -200,7 +200,11 @@ contract ShackToken is owned, TokenERC20 {
     ) TokenERC20(initialSupply, tokenName, tokenSymbol, tokenDecimals) public {
         require(yearsTerm == 10 || yearsTerm == 20 || yearsTerm == 30);
         termYears = yearsTerm;
-        shackFeeAddress = shackFeeAddr;
+        if ( shackFeeAddr == 0x0 ) {
+            shackFeeAddress = owner // send fees to owner if separate address not provided
+        } else {    
+            shackFeeAddress = shackFeeAddr;
+        }
         timestampCreated = now;
     }
 
@@ -269,4 +273,12 @@ contract ShackToken is owned, TokenERC20 {
  //       _transfer(msg.sender, shackFeeAddress, feeAmt);              // makes the fee transfers
         msg.sender.transfer(amount * sellPrice - feeAmt);          // sends ether to the seller. It's important to do this last to avoid recursion attacks
     }
+
+    /**
+      to be able to delete the crowdsale
+    */
+    function destruct() onlyOwner {
+        selfdestruct(this)
+    }
+}
 }

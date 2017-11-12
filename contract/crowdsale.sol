@@ -31,6 +31,7 @@ contract CrowdsaleShack {
         uint etherCostOfEachToken,
         address addressOfTokenUsedAsReward
     ) {
+        require( addressOfTokenUsedAsReward != ifSuccessfulSendTo );
         beneficiary = ifSuccessfulSendTo;
         fundingGoal = fundingGoalInEthers * 1 ether;
         deadline = now + durationInMinutes * 1 minutes;
@@ -96,5 +97,12 @@ contract CrowdsaleShack {
                 fundingGoalReached = false;
             }
         }
+    }
+
+    /**
+      to be able to delete the crowdsale
+    */
+    function destruct() afterDeadline {
+        selfdestruct(this)
     }
 }
