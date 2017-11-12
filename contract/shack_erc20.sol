@@ -46,9 +46,9 @@ contract TokenERC20 {
         uint256 initialSupply,
         string tokenName,
         string tokenSymbol,
-        uint8 decimalPositions
+        uint8 tokenDecimals
     ) public {
-        decimals = decimalPositions;
+        decimals = tokenDecimals;
         totalSupply = initialSupply * 10 ** uint256(decimals);  // Update total supply with the decimal amount
         balanceOf[msg.sender] = totalSupply;                // Give the creator all initial tokens
         name = tokenName;                                   // Set the name for display purposes
@@ -179,9 +179,9 @@ contract ShackToken is owned, TokenERC20 {
 
     uint256 public sellPrice = 300000000;
     uint256 public buyPrice = 300000000;
-    uint8   public termYears;
-    uint24  public shackFee=1110000;  // % of shack Fee with XXX decimal places, teken from decimals
-    address        shackFeeAddress; // Address to send fees 
+    uint8   public termYears = 10;
+    uint24  public shackFee = 1110000;  // % of shack Fee with XXX decimal places
+    address public shackFeeAddress; // Address to send fees 
     uint256 public timestampCreated; // to save timestamp when the contract was created
 
     mapping (address => bool) public frozenAccount;
@@ -192,12 +192,12 @@ contract ShackToken is owned, TokenERC20 {
     /* Initializes contract with initial supply tokens to the creator of the contract */
     function ShackToken(
         uint256 initialSupply,
-        uint8   decimalPositions,
+        uint8   tokenDecimals,
         uint8   yearsTerm,
-        string tokenName,
-        string tokenSymbol,
+        string  tokenName,
+        string  tokenSymbol,
         address shackFeeAddr
-    ) TokenERC20(initialSupply, tokenName, tokenSymbol, decimalPositions) public {
+    ) TokenERC20(initialSupply, tokenName, tokenSymbol, tokenDecimals) public {
         require(yearsTerm == 10 || yearsTerm == 20 || yearsTerm == 30);
         termYears = yearsTerm;
         shackFeeAddress = shackFeeAddr;
@@ -256,7 +256,7 @@ contract ShackToken is owned, TokenERC20 {
     function buy() payable public {
         uint256 feeAmt = feeAmount(msg.value);
         uint amount = (msg.value - feeAmt) / buyPrice;               // calculates the amount
-        _transfer(msg.sender, shackFeeAddress, feeAmt);              // makes the fee transfers
+ //       _transfer(msg.sender, shackFeeAddress, feeAmt);              // makes the fee transfers
         _transfer(this, msg.sender, amount);              // makes the transfers
     }
 
@@ -265,7 +265,8 @@ contract ShackToken is owned, TokenERC20 {
     function sell(uint256 amount) public {
         uint256 feeAmt = feeAmount(amount * sellPrice);
         require(this.balance >= amount * sellPrice);      // checks if the contract has enough ether to buy
-        _transfer(msg.sender, this, amount);              // makes the transfers subtracting fee
+        _transfer(msg.sender, this, amount);              // makes the transfers 
+ //       _transfer(msg.sender, shackFeeAddress, feeAmt);              // makes the fee transfers
         msg.sender.transfer(amount * sellPrice - feeAmt);          // sends ether to the seller. It's important to do this last to avoid recursion attacks
     }
 }
