@@ -5,7 +5,7 @@ interface token {
     function transfer(address receiver, uint amount);
 }
 
-contract Crowdsale {
+contract CrowdsaleShack {
     address public beneficiary;
     uint public fundingGoal;
     uint public amountRaised;
@@ -24,7 +24,7 @@ contract Crowdsale {
      *
      * Setup the owner
      */
-    function Crowdsale(
+    function CrowdsaleShack(
         address ifSuccessfulSendTo,
         uint fundingGoalInEthers,
         uint durationInMinutes,
