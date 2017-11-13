@@ -1,9 +1,11 @@
 
 pragma solidity ^0.4.16;
 
-interface token {
-    function transfer(address receiver, uint amount);
+
+interface Token {
+    function transfer(address receiver, uint256 amount) public;
 }
+
 
 contract CrowdsaleShack {
     address public beneficiary;
@@ -11,13 +13,15 @@ contract CrowdsaleShack {
     uint public amountRaised;
     uint public deadline;
     uint public price;
-    token public tokenReward;
+    Token public tokenReward;
     mapping(address => uint256) public balanceOf;
-    bool fundingGoalReached = false;
-    bool crowdsaleClosed = false;
+    bool public fundingGoalReached = false;
+    bool public crowdsaleClosed = false;
 
-    event GoalReached(address recipient, uint totalAmountRaised);
-    event FundTransfer(address backer, uint amount, bool isContribution);
+    event GoalReached(address recipient, uint256 totalAmountRaised);
+    event FundTransfer(address backer, uint256 amount, bool isContribution);
+    event FundCaclulated(address backer, uint256 amount, bool isContribution);
+    event PayableEvent(address _from, uint256 amount);
 
     /**
      * Constrctor function
@@ -30,13 +34,13 @@ contract CrowdsaleShack {
         uint durationInMinutes,
         uint etherCostOfEachToken,
         address addressOfTokenUsedAsReward
-    ) {
-        require( addressOfTokenUsedAsReward != ifSuccessfulSendTo );
+    ) public {
+        require(addressOfTokenUsedAsReward != ifSuccessfulSendTo);
         beneficiary = ifSuccessfulSendTo;
         fundingGoal = fundingGoalInEthers * 1 ether;
         deadline = now + durationInMinutes * 1 minutes;
         price = etherCostOfEachToken * 1 ether;
-        tokenReward = token(addressOfTokenUsedAsReward);
+        tokenReward = Token(addressOfTokenUsedAsReward);
     }
 
     /**
@@ -44,11 +48,14 @@ contract CrowdsaleShack {
      *
      * The function without name is the default function that is called whenever anyone sends funds to a contract
      */
-    function () payable {
+    function () public payable {
+        PayableEvent(msg.sender, msg.value);
         require(!crowdsaleClosed);
-        uint amount = msg.value;
+        uint256 amount = msg.value;
         balanceOf[msg.sender] += amount;
         amountRaised += amount;
+        FundCaclulated(msg.sender, amount, true);
+
         tokenReward.transfer(msg.sender, amount / price);
         FundTransfer(msg.sender, amount, true);
     }
@@ -60,14 +67,13 @@ contract CrowdsaleShack {
      *
      * Checks if the goal or time limit has been reached and ends the campaign
      */
-    function checkGoalReached() afterDeadline {
-        if (amountRaised >= fundingGoal){
+    function checkGoalReached() public afterDeadline {
+        if (amountRaised >= fundingGoal) {
             fundingGoalReached = true;
             GoalReached(beneficiary, amountRaised);
         }
         crowdsaleClosed = true;
     }
-
 
     /**
      * Withdraw the funds
@@ -76,7 +82,7 @@ contract CrowdsaleShack {
      * sends the entire amount to the beneficiary. If goal was not reached, each contributor can withdraw
      * the amount they contributed.
      */
-    function safeWithdrawal() afterDeadline {
+    function safeWithdrawal() public afterDeadline {
         if (!fundingGoalReached) {
             uint amount = balanceOf[msg.sender];
             balanceOf[msg.sender] = 0;
@@ -102,7 +108,7 @@ contract CrowdsaleShack {
     /**
       to be able to delete the crowdsale
     */
-    function destruct() afterDeadline {
-        selfdestruct(this)
+    function destruct() public afterDeadline {
+        selfdestruct(this);
     }
 }
