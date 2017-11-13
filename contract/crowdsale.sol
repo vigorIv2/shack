@@ -24,13 +24,13 @@ contract CrowdsaleShack {
      *
      * Setup the owner
      */
-    function CrowdsaleShack(
+    function CrowdsaleShack (
         address ifSuccessfulSendTo,
         uint fundingGoalInEthers,
         uint durationInMinutes,
         uint etherCostOfEachToken,
         address addressOfTokenUsedAsReward
-    ) {
+    ) public {
         require( addressOfTokenUsedAsReward != ifSuccessfulSendTo );
         beneficiary = ifSuccessfulSendTo;
         fundingGoal = fundingGoalInEthers * 1 ether;
@@ -102,7 +102,7 @@ contract CrowdsaleShack {
     /**
       to be able to delete the crowdsale
     */
-    function destruct() afterDeadline {
-        selfdestruct(this)
+    function destruct() afterDeadline public {
+        selfdestruct(this);
     }
 }

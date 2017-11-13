@@ -201,7 +201,7 @@ contract ShackToken is owned, TokenERC20 {
         require(yearsTerm == 10 || yearsTerm == 20 || yearsTerm == 30);
         termYears = yearsTerm;
         if ( shackFeeAddr == 0x0 ) {
-            shackFeeAddress = owner // send fees to owner if separate address not provided
+            shackFeeAddress = owner; // send fees to owner if separate address not provided
         } else {    
             shackFeeAddress = shackFeeAddr;
         }
@@ -277,8 +277,7 @@ contract ShackToken is owned, TokenERC20 {
     /**
       to be able to delete the crowdsale
     */
-    function destruct() onlyOwner {
-        selfdestruct(this)
+    function destruct() onlyOwner public {
+        selfdestruct(this);
     }
-}
 }
