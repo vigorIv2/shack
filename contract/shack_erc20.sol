@@ -1,10 +1,14 @@
-pragma solidity ^0.4.16;
+pragma solidity 0.4.16;
 
-contract owned {
+
+contract Owned {
+
     address public owner;
+    address public originalOwner;
 
-    function owned() public {
+    function Owned() public {
         owner = msg.sender;
+        originalOwner = msg.sender;
     }
 
     modifier onlyOwner {
@@ -12,12 +16,27 @@ contract owned {
         _;
     }
 
-    function transferOwnership(address newOwner) onlyOwner public {
+    modifier onlyOriginator {
+        require(msg.sender == originalOwner);
+        _;
+    }
+
+    function transferOwnership(address newOwner) public onlyOwner {
         owner = newOwner;
     }
+
+    function returnOwnership() public onlyOriginator {
+        owner = originalOwner;
+    }
+
 }
 
-interface tokenRecipient { function receiveApproval(address _from, uint256 _value, address _token, bytes _extraData) public; }
+
+interface TokenRecipient {
+    function receiveApproval(address _from, uint256 _value,
+    address _token, bytes _extraData) public;
+}
+
 
 contract TokenERC20 {
     // Public variables of the token
@@ -32,10 +51,11 @@ contract TokenERC20 {
     mapping (address => mapping (address => uint256)) public allowance;
 
     // This generates a public event on the blockchain that will notify clients
-    event Transfer(address indexed from, address indexed to, uint256 value);
+    event TransferEvent(address indexed from, address indexed to, uint256 value);
+    event TokenERC20Transfer(address indexed from, address indexed to, uint256 value);
 
     // This notifies clients about the amount burnt
-    event Burn(address indexed from, uint256 value);
+    event BurnTokens(address indexed from, uint256 value);
 
     /**
      * Constrctor function
@@ -53,27 +73,6 @@ contract TokenERC20 {
         balanceOf[msg.sender] = totalSupply;                // Give the creator all initial tokens
         name = tokenName;                                   // Set the name for display purposes
         symbol = tokenSymbol;                               // Set the symbol for display purposes
-    }
-
-    /**
-     * Internal transfer, only can be called by this contract
-     */
-    function _transfer(address _from, address _to, uint _value) internal {
-        // Prevent transfer to 0x0 address. Use burn() instead
-        require(_to != 0x0);
-        // Check if the sender has enough
-        require(balanceOf[_from] >= _value);
-        // Check for overflows
-        require(balanceOf[_to] + _value > balanceOf[_to]);
-        // Save this for an assertion in the future
-        uint previousBalances = balanceOf[_from] + balanceOf[_to];
-        // Subtract from the sender
-        balanceOf[_from] -= _value;
-        // Add the same to the recipient
-        balanceOf[_to] += _value;
-        Transfer(_from, _to, _value);
-        // Asserts are used to use static analysis to find bugs in your code. They should never fail
-        assert(balanceOf[_from] + balanceOf[_to] == previousBalances);
     }
 
     /**
@@ -112,8 +111,7 @@ contract TokenERC20 {
      * @param _spender The address authorized to spend
      * @param _value the max amount they can spend
      */
-    function approve(address _spender, uint256 _value) public
-        returns (bool success) {
+    function approve(address _spender, uint256 _value) public returns (bool success) {
         allowance[msg.sender][_spender] = _value;
         return true;
     }
@@ -127,10 +125,8 @@ contract TokenERC20 {
      * @param _value the max amount they can spend
      * @param _extraData some extra information to send to the approved contract
      */
-    function approveAndCall(address _spender, uint256 _value, bytes _extraData)
-        public
-        returns (bool success) {
-        tokenRecipient spender = tokenRecipient(_spender);
+    function approveAndCall(address _spender, uint256 _value, bytes _extraData) public returns (bool success) {
+        TokenRecipient spender = TokenRecipient(_spender);
         if (approve(_spender, _value)) {
             spender.receiveApproval(msg.sender, _value, this, _extraData);
             return true;
@@ -148,7 +144,7 @@ contract TokenERC20 {
         require(balanceOf[msg.sender] >= _value);   // Check if the sender has enough
         balanceOf[msg.sender] -= _value;            // Subtract from the sender
         totalSupply -= _value;                      // Updates totalSupply
-        Burn(msg.sender, _value);
+        BurnTokens(msg.sender, _value);
         return true;
     }
 
@@ -166,28 +162,54 @@ contract TokenERC20 {
         balanceOf[_from] -= _value;                         // Subtract from the targeted balance
         allowance[_from][msg.sender] -= _value;             // Subtract from the sender's allowance
         totalSupply -= _value;                              // Update totalSupply
-        Burn(_from, _value);
+        BurnTokens(_from, _value);
         return true;
     }
+
+    /**
+     * Internal transfer, only can be called by this contract
+     */
+    function _transfer(address _from, address _to, uint256 _value) internal {
+        TokenERC20Transfer(_from, _to, _value);
+        // Prevent transfer to 0x0 address. Use burn() instead
+        require(_to != 0x0);
+        // Check if the sender has enough
+        require(balanceOf[_from] >= _value);
+        // Check for overflows
+        require(balanceOf[_to] + _value > balanceOf[_to]);
+        // Save this for an assertion in the future
+        uint previousBalances = balanceOf[_from] + balanceOf[_to];
+        // Subtract from the sender
+        balanceOf[_from] -= _value;
+        // Add the same to the recipient
+        balanceOf[_to] += _value;
+        TransferEvent(_from, _to, _value);
+        // Asserts are used to use static analysis to find bugs in your code. They should never fail
+        assert(balanceOf[_from] + balanceOf[_to] == previousBalances);
+    }
+
+
 }
 
 /******************************************/
 /*  SHACk ADVANCED TOKEN STARTS HERE      */
 /******************************************/
 
-contract ShackToken is owned, TokenERC20 {
+contract ShackToken is Owned, TokenERC20 {
 
     uint256 public sellPrice = 300000000;
     uint256 public buyPrice = 300000000;
     uint8   public termYears = 10;
     uint24  public shackFee = 1110000;  // % of shack Fee with XXX decimal places
-    address public shackFeeAddress; // Address to send fees 
+    address public shackFeeAddress; // Address to send fees
     uint256 public timestampCreated; // to save timestamp when the contract was created
 
     mapping (address => bool) public frozenAccount;
 
     /* This generates a public event on the blockchain that will notify clients */
     event FrozenFunds(address target, bool frozen);
+    event TransferEvent(address target, uint256 value);
+    event ShackAboutTransfer(address indexed from, address indexed to, uint256 value);
 
     /* Initializes contract with initial supply tokens to the creator of the contract */
     function ShackToken(
@@ -197,43 +219,49 @@ contract ShackToken is owned, TokenERC20 {
         string  tokenName,
         string  tokenSymbol,
         address shackFeeAddr
-    ) TokenERC20(initialSupply, tokenName, tokenSymbol, tokenDecimals) public {
+    ) public TokenERC20(initialSupply, tokenName, tokenSymbol, tokenDecimals) {
         require(yearsTerm == 10 || yearsTerm == 20 || yearsTerm == 30);
         termYears = yearsTerm;
+<<<<<<< HEAD
         if ( shackFeeAddr == 0x0 ) {
             shackFeeAddress = owner; // send fees to owner if separate address not provided
         } else {    
+=======
+        if (shackFeeAddr == 0x0) {
+            shackFeeAddress = owner; // send fees to owner if separate address not provided
+        } else {
+>>>>>>> e09dcc63a353de19520fb0add5fe59876f4cfc4d
             shackFeeAddress = shackFeeAddr;
         }
         timestampCreated = now;
     }
 
-    /* Internal transfer, only can be called by this contract */
-    function _transfer(address _from, address _to, uint _value) internal {
-        require (_to != 0x0);                               // Prevent transfer to 0x0 address. Use burn() instead
-        require (balanceOf[_from] > _value);                // Check if the sender has enough
-        require (balanceOf[_to] + _value > balanceOf[_to]); // Check for overflows
-        require(!frozenAccount[_from]);                     // Check if sender is frozen
-        require(!frozenAccount[_to]);                       // Check if recipient is frozen
-        balanceOf[_from] -= _value;                         // Subtract from the sender
-        balanceOf[_to] += _value;                           // Add the same to the recipient
-        Transfer(_from, _to, _value);
+    /**
+     * Transfer tokens
+     *
+     * Send `_value` tokens to `_to` from your account
+     *
+     * @param _to The address of the recipient
+     * @param _value the amount to send
+     */
+    function transfer(address _to, uint256 _value) public onlyOwner {
+        _transfer(msg.sender, _to, _value);
     }
 
     /// @notice Create `mintedAmount` tokens and send it to `target`
     /// @param target Address to receive the tokens
     /// @param mintedAmount the amount of tokens it will receive
-    function mintToken(address target, uint256 mintedAmount) onlyOwner public {
+    function mintToken(address target, uint256 mintedAmount) public onlyOwner {
         balanceOf[target] += mintedAmount;
         totalSupply += mintedAmount;
-        Transfer(0, this, mintedAmount);
-        Transfer(this, target, mintedAmount);
+        TransferEvent(0, this, mintedAmount);
+        TransferEvent(this, target, mintedAmount);
     }
 
     /// @notice `freeze? Prevent | Allow` `target` from sending & receiving tokens
     /// @param target Address to be frozen
     /// @param freeze either to freeze it or not
-    function freezeAccount(address target, bool freeze) onlyOwner public {
+    function freezeAccount(address target, bool freeze) public onlyOwner {
         frozenAccount[target] = freeze;
         FrozenFunds(target, freeze);
     }
@@ -241,43 +269,65 @@ contract ShackToken is owned, TokenERC20 {
     /// @notice Allow users to buy tokens for `newBuyPrice` eth and sell tokens for `newSellPrice` eth
     /// @param newSellPrice Price the users can sell to the contract
     /// @param newBuyPrice Price users can buy from the contract
-    function setPrices(uint256 newSellPrice, uint256 newBuyPrice) onlyOwner public {
+    function setPrices(uint256 newSellPrice, uint256 newBuyPrice) public onlyOwner {
         sellPrice = newSellPrice;
         buyPrice = newBuyPrice;
     }
 
     /// @param newFee users pay from each purchase
-    function setFees(uint24 newFee) onlyOwner public {
+    function setFees(uint24 newFee) public onlyOwner {
         shackFee = newFee;
     }
 
-    /// returns feeAmount based on amount parameters and fee percentage
-    function feeAmount(uint256 amount) private view returns (uint256){
-        return amount / 100 * shackFee;
-    }
-
     /// @notice Buy tokens from contract by sending ether
-    function buy() payable public {
-        uint256 feeAmt = feeAmount(msg.value);
+    function buy() public payable {
+        uint256 feeAmt = feeAmountFraction(msg.value);
         uint amount = (msg.value - feeAmt) / buyPrice;               // calculates the amount
  //       _transfer(msg.sender, shackFeeAddress, feeAmt);              // makes the fee transfers
-        _transfer(this, msg.sender, amount);              // makes the transfers
+        transfer(msg.sender, amount);              // makes the transfers
     }
 
     /// @notice Sell `amount` tokens to contract
     /// @param amount amount of tokens to be sold
     function sell(uint256 amount) public {
-        uint256 feeAmt = feeAmount(amount * sellPrice);
+        uint256 feeAmt = feeAmountFraction(amount * sellPrice);
         require(this.balance >= amount * sellPrice);      // checks if the contract has enough ether to buy
-        _transfer(msg.sender, this, amount);              // makes the transfers 
- //       _transfer(msg.sender, shackFeeAddress, feeAmt);              // makes the fee transfers
-        msg.sender.transfer(amount * sellPrice - feeAmt);          // sends ether to the seller. It's important to do this last to avoid recursion attacks
+        _transfer(msg.sender, this, amount);              // makes the transfers
+ //       _transfer(msg.sender, shackFeeAddress, feeAmt);  // makes the fee transfers
+        msg.sender.transfer(amount * sellPrice - feeAmt);  // sends ether to the seller.
+                            // It's important to do this last to avoid recursion attacks
     }
 
     /**
       to be able to delete the crowdsale
     */
+<<<<<<< HEAD
     function destruct() onlyOwner public {
         selfdestruct(this);
     }
+=======
+    function destruct() public onlyOwner {
+        selfdestruct(this);
+    }
+
+    /* Internal transfer, only can be called by this contract */
+    function _transfer(address _from, address _to, uint256 _value) internal {
+        ShackAboutTransfer(_from, _to, _value);
+        require(_to != 0x0);                               // Prevent transfer to 0x0 address. Use burn() instead
+        require(balanceOf[_from] > _value);                // Check if the sender has enough
+        require(balanceOf[_to] + _value > balanceOf[_to]); // Check for overflows
+        require(!frozenAccount[_from]);                     // Check if sender is frozen
+        require(!frozenAccount[_to]);                       // Check if recipient is frozen
+        balanceOf[_from] -= _value;                         // Subtract from the sender
+        balanceOf[_to] += _value;                           // Add the same to the recipient
+        TransferEvent(_from, _to, _value);
+    }
+
+    /// returns feeAmount based on amount parameters and fee percentage
+    function feeAmountFraction(uint256 amount) internal view returns (uint256) {
+        return amount / shackFee;
+    }
+
+
+>>>>>>> e09dcc63a353de19520fb0add5fe59876f4cfc4d
 }
