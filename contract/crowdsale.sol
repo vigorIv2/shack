@@ -35,11 +35,7 @@ contract CrowdsaleShack {
         uint etherCostOfEachToken,
         address addressOfTokenUsedAsReward
     ) public {
-<<<<<<< HEAD
-        require( addressOfTokenUsedAsReward != ifSuccessfulSendTo );
-=======
         require(addressOfTokenUsedAsReward != ifSuccessfulSendTo);
->>>>>>> e09dcc63a353de19520fb0add5fe59876f4cfc4d
         beneficiary = ifSuccessfulSendTo;
         fundingGoal = fundingGoalInEthers * 1 ether;
         deadline = now + durationInMinutes * 1 minutes;
@@ -112,11 +108,7 @@ contract CrowdsaleShack {
     /**
       to be able to delete the crowdsale
     */
-<<<<<<< HEAD
-    function destruct() afterDeadline public {
-=======
     function destruct() public afterDeadline {
->>>>>>> e09dcc63a353de19520fb0add5fe59876f4cfc4d
         selfdestruct(this);
     }
 }

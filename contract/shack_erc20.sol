@@ -1,4 +1,4 @@
-pragma solidity 0.4.16;
+pragma solidity ^0.4.16;
 
 
 contract Owned {
@@ -222,15 +222,9 @@ contract ShackToken is Owned, TokenERC20 {
     ) public TokenERC20(initialSupply, tokenName, tokenSymbol, tokenDecimals) {
         require(yearsTerm == 10 || yearsTerm == 20 || yearsTerm == 30);
         termYears = yearsTerm;
-<<<<<<< HEAD
-        if ( shackFeeAddr == 0x0 ) {
-            shackFeeAddress = owner; // send fees to owner if separate address not provided
-        } else {    
-=======
         if (shackFeeAddr == 0x0) {
             shackFeeAddress = owner; // send fees to owner if separate address not provided
         } else {
->>>>>>> e09dcc63a353de19520fb0add5fe59876f4cfc4d
             shackFeeAddress = shackFeeAddr;
         }
         timestampCreated = now;
@@ -301,11 +295,6 @@ contract ShackToken is Owned, TokenERC20 {
     /**
       to be able to delete the crowdsale
     */
-<<<<<<< HEAD
-    function destruct() onlyOwner public {
-        selfdestruct(this);
-    }
-=======
     function destruct() public onlyOwner {
         selfdestruct(this);
     }
@@ -329,5 +318,4 @@ contract ShackToken is Owned, TokenERC20 {
     }
 
 
->>>>>>> e09dcc63a353de19520fb0add5fe59876f4cfc4d
 }
