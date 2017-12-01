@@ -3,13 +3,15 @@ require('babel-polyfill');
 const Provider = require('./helpers/Provider');
 const ProviderRopsten = Provider.createRopstenNetwork("itype here your private key from owner address");
 const ProviderMain = Provider.createMainNetwork("type here your private key from owner address");
-const ProviderTestRpc = Provider.createTestRpcNetwork("c727c3c7b6f4428c63b21f2c8fcbe98f04bdd04646f8bccc51fdddd437043ebe");
+const ProviderTestRpc = Provider.createTestRpcNetwork("ea1b400b9288bec42db66009a8e4fbe7d07b4d34e94fc888b523c7dc15d1d131");
+const ProviderRinkeby = Provider.createRinkebyNetwork("type here your private key from owner address");
 
 module.exports = {
     networks: {
         ropsten: ProviderRopsten.getNetwork(),
         mainnet: ProviderMain.getNetwork(),
         testrpc: ProviderTestRpc.getNetwork(),
+        rinkeby: ProviderRinkeby.getNetwork(),
         development: {
             host: "localhost",
             port: 8545,
@@ -21,6 +23,6 @@ module.exports = {
             port: 8555,
             network_id: "*",
             gas: 0xffffffff
-        }
+        },
     }
 };

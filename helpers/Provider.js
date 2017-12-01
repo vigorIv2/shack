@@ -17,8 +17,10 @@ const FilterSubprovider = require('web3-provider-engine/subproviders/filters.js'
 const NETWORK_INFURA_MAIN = 'https://mainnet.infura.io/';
 const NETWORK_INFURA_ROPSTEN = 'https://ropsten.infura.io/';
 const NETWORK_TESTRPC = 'http://localhost:8545';
+const NETWORK_RINKEBY = 'http://localhost:8545';
 const NETWORK_ID_MAIN = 1;
 const NETWORK_ID_ROPSTEN = 3;
+const NETWORK_ID_RINKEBY = 4;
 const NETWORK_ID_TESTRPC = '*';
 
 Provider.createMainNetwork = function (privateKey) {
@@ -31,6 +33,10 @@ Provider.createRopstenNetwork = function (privateKey) {
 
 Provider.createTestRpcNetwork = function (privateKey) {
     return new Provider(new NetworkModel(NETWORK_ID_TESTRPC), NETWORK_TESTRPC, privateKey);
+};
+
+Provider.createRinkebyNetwork = function (privateKey) {
+    return new Provider(new NetworkModel(NETWORK_ID_RINKEBY), NETWORK_RINKEBY, privateKey);
 };
 
 function Provider(networkModel, networkUrl, privateKey) {
