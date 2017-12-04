@@ -1,25 +1,19 @@
 pragma solidity ^0.4.13;
 
 import "zeppelin-solidity/contracts/token/MintableToken.sol";
-import "zeppelin-solidity/contracts/token/BurnableToken.sol";
 import "zeppelin-solidity/contracts/token/PausableToken.sol";
 
 /**
 * SHACK - Smart Home Acquisition Contract token
 */
-contract ShackToken is MintableToken, PausableToken, BurnableToken {
-  string public name = "SHACk Token2";
-  string public symbol = "SHAC2";
-  uint256 public creationTime;
+contract ShackToken is MintableToken, PausableToken {
+  string public name = "SHACk Token Dummy";
+  string public symbol = "SHACd";
   uint256 public decimals = 6;
 
-  function ShackToken(
-	  string tokenName,
-	  string tokenSymbol
-  ) public {
+  function ShackToken(string tokenName, string tokenSymbol) public {
 	  name = tokenName;
 	  symbol = tokenSymbol;
-    creationTime = now;
   }
 
 //  // Overrided destructor
@@ -33,7 +27,7 @@ contract ShackToken is MintableToken, PausableToken, BurnableToken {
 //      require(mintingFinished);
 //      super.destroyAndSend(_recipient);
 //  }
-//
+
   /**
     * @dev Override MintableTokenn.finishMinting() to add canMint modifier
   */  
