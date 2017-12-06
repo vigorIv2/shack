@@ -1,57 +1,46 @@
 pragma solidity ^0.4.13;
 
-import 'contracts/ShackToken.sol';
-import "zeppelin-solidity/contracts/crowdsale/Crowdsale.sol";
+import './ShackToken.sol';
+//import "zeppelin-solidity/contracts/crowdsale/Crowdsale.sol";
 import "zeppelin-solidity/contracts/token/MintableToken.sol";
 import "zeppelin-solidity/contracts/math/SafeMath.sol";
 
-import "zeppelin-solidity/contracts/crowdsale/FinalizableCrowdsale.sol";
+// import "zeppelin-solidity/contracts/crowdsale/FinalizableCrowdsale.sol";
 //import "zeppelin-solidity/contracts/crowdsale/RefundableCrowdsale.sol";
 import "zeppelin-solidity/contracts/ownership/Ownable.sol";
-import "contracts/TokensCappedCrowdsale.sol";
-import "contracts/PausableCrowdsale.sol";
+//import "./TokensCappedCrowdsale.sol";
+import "./PausableCrowdsale.sol";
 
 /**
   Smart Home Acquisition Contract crowdsale
 */
 // contract ShackTokenCrowdsale is Crowdsale, TokensCappedCrowdsale(1), PausableCrowdsale(true) {
-contract ShackTokenCrowdsaleGeneric is Ownable, Crowdsale {
+contract ShackSale is Ownable, PausableCrowdsale(false) {
   using SafeMath for uint256;
-  
-  string public crowdsaleTokenName="n/a";
-  string public crowdsaleTokenSymbol="n/a";
-  string public crowdfundedPropertyURL="n/a";
-  uint256 public crowdsaleGoal;
-  uint256 public termMonths;
-  address public remainingTokensWallet;
+// https://www.epochconverter.com/
 
-  function ShackTokenCrowdsaleGeneric(uint256 _startTime, uint256 _endTime, uint256 _rate, address _wallet,
-                              address _remainingTokensWallet,
-                              string _crowdsaleTokenName,
-                              string _crowdsaleTokenSymbol,
-                              string _crowdfundedPropertyURL,
-                              uint256 _tokensCap,
-                              uint256 _crowdsaleGoal,
-                              uint256 _termMonths
-  ) public  
-   Crowdsale(_startTime, _endTime, _rate, _wallet) {
-    crowdsaleTokenName = _crowdsaleTokenName;
-    crowdsaleTokenSymbol = _crowdsaleTokenSymbol;
-    remainingTokensWallet = _remainingTokensWallet;
-    crowdfundedPropertyURL = _crowdfundedPropertyURL;
-//    tokensCap = _tokensCap;
-//    crowdsaleGoal = _crowdsaleGoal;
-    termMonths = _termMonths;
+  uint256 constant _duration  = 60; // default sale duration
+  uint256 initialRate         = 467310000;
+  address constant _wallet    = 0x2999A54A61579d42E598F7F2171A06FC4609a2fC;
+  address public remainingTokensWallet = 0x0D7257484F4d7847e74dc09d5454c31bbfc94165;
+  string  public constant crowdsaleTokenName = "SHAC for 69 Eagle Town CA 8";
+  string  public constant crowdsaleTokenSymbol = "SHK.CA.8.Town.69.Eagle";
+  string  public constant crowdfundedPropertyURL = "https://drive.google.com/open?id=1hSj4Rt7lU3nH0uDlH8Vfby6fif6bV8df";
+  uint256 constant tokensCap = 5;
+  uint256 constant _crowdsaleGoal = 2;
+  uint256 public constant termMonths = 12;
+  
+  function ShackSale() public 
+    Crowdsale(now + 1, now + 1 + (86400 * _duration), initialRate, _wallet) {
     
     // allocate tokens to Shack Crowdsale 
-    mintTokens(wallet, _crowdsaleGoal);
+    mintTokens(_wallet, _crowdsaleGoal);
   }
 
   // creates the token to be sold.
   // override this method to have crowdsale of a specific MintableToken token.
   function createTokenContract() internal returns (MintableToken) {
     ShackToken tokenLoc = new ShackToken(crowdsaleTokenName,crowdsaleTokenSymbol);
-    tokenLoc.pause();
     return tokenLoc;
   }
 
@@ -73,15 +62,51 @@ contract ShackTokenCrowdsaleGeneric is Ownable, Crowdsale {
   /**
   * @dev Sets SHACK to Ether rate. Will be called multiple times durign the crowdsale to adjsut the rate
   * since SHACK cost is fixed in USD, but USD/ETH rate is changing
-  * @param _rate defines CAT/ETH rate: 1 ETH = _rate CATs
+  * @param paramRate defines SHK/ETH rate: 1 ETH = paramRate SHKs
   */
-  function setRate(uint256 _rate) external onlyOwner {
-      require(_rate != 0x0);
-      rate = _rate;
-      RateChange(_rate);
+  function setRate(uint256 paramRate) external onlyOwner {
+      require(paramRate != 0x0);
+      rate = paramRate;
+      RateChange(paramRate);
+  }
+
+  function setRatePrime(uint256 paramRate) public {
+      require(paramRate != 0x0);
+      rate = paramRate;
+      RateChange(paramRate);
   }
 
 
+  // fallback function can be used to buy tokens
+  function () external payable {
+    buyTokens(msg.sender);
+  }
+
+  // low level token purchase function
+  function buyTokens(address beneficiary) public payable {
+    require(beneficiary != address(0));
+    require(validPurchase());
+
+    uint256 weiAmount = msg.value;
+
+    // calculate token amount to be created
+    uint256 tokens = weiAmount.mul(rate).div(1000000000000);
+
+    // update state
+    weiRaised = weiRaised.add(weiAmount);
+
+    token.mint(beneficiary, tokens);
+    TokenPurchase(msg.sender, beneficiary, weiAmount, tokens);
+
+    forwardFunds();
+  }
+
+  // send ether to the fund collection wallet
+  // override to create custom fund forwarding mechanisms
+  function forwardFunds() internal {
+    wallet.transfer(msg.value);
+  }
+  
   /**
   * @dev Allows to adjust the crowdsale end time
   */
@@ -95,9 +120,9 @@ contract ShackTokenCrowdsaleGeneric is Ownable, Crowdsale {
   /**
   * @dev Sets the wallet to forward ETH collected funds
   */
-  function setWallet(address _wallet) external onlyOwner {
-      require(_wallet != 0x0);
-      wallet = _wallet;
+  function setWallet(address paramWallet) external onlyOwner {
+      require(paramWallet != 0x0);
+      wallet = paramWallet;
   }
 
 //  /**
@@ -127,19 +152,5 @@ contract ShackTokenCrowdsaleGeneric is Ownable, Crowdsale {
 //      token.transferOwnership(owner);
 //  }
 //
-  /**
-  * @dev Helper to Pause ShackToken
-  */
-  function pauseTokens() public onlyOwner {
-      ShackToken(token).pause();
-  }
-
-  /**
-  * @dev Helper to UnPause ShackToken
-  */
-  function unpauseTokens() public onlyOwner {
-      ShackToken(token).unpause();
-  }
-
 
 }

@@ -1,12 +1,11 @@
 pragma solidity ^0.4.13;
 
 import "zeppelin-solidity/contracts/token/MintableToken.sol";
-import "zeppelin-solidity/contracts/token/PausableToken.sol";
 
 /**
 * SHACK - Smart Home Acquisition Contract token
 */
-contract ShackToken is MintableToken, PausableToken {
+contract ShackToken is MintableToken {
   string public name = "SHACk Token Dummy";
   string public symbol = "SHACd";
   uint256 public decimals = 6;
