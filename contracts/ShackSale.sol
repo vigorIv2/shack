@@ -20,11 +20,11 @@ contract ShackSale is Ownable, PausableCrowdsale(false) {
 // https://www.epochconverter.com/
 
   uint256 constant _duration  = 60; // default sale duration
-  uint256 initialRate         = 467310000;
+  uint256 initialRate         = 620690000;
   address constant _wallet    = 0x2999A54A61579d42E598F7F2171A06FC4609a2fC;
   address public remainingTokensWallet = 0x0D7257484F4d7847e74dc09d5454c31bbfc94165;
-  string  public constant crowdsaleTokenName = "SHAC for 69 Eagle Town CA 8";
-  string  public constant crowdsaleTokenSymbol = "SHK.CA.8.Town.69.Eagle";
+  string  public constant crowdsaleTokenName = "SHAC for 5391 Meadowlark Dr. Huntington Beach CA 92649";
+  string  public constant crowdsaleTokenSymbol = "SHAC.CA.92649.Huntington_Beach.5391.Meadowlark_Dr";
   string  public constant crowdfundedPropertyURL = "https://drive.google.com/open?id=1hSj4Rt7lU3nH0uDlH8Vfby6fif6bV8df";
   uint256 constant tokensCap = 5;
   uint256 constant _crowdsaleGoal = 2;
@@ -70,7 +70,7 @@ contract ShackSale is Ownable, PausableCrowdsale(false) {
       RateChange(paramRate);
   }
 
-  function setRatePrime(uint256 paramRate) public {
+  function setRatePrime(uint256 paramRate) public onlyOwner {
       require(paramRate != 0x0);
       rate = paramRate;
       RateChange(paramRate);
