@@ -13,35 +13,32 @@ import "./PausableCrowdsale.sol";
 */
                                                                                      
 //contract ShackSale is Ownable, PausableCrowdsale(false), TokensCappedCrowdsale(1000000000000000000), RefundableCrowdsale {
-contract ShackSale is Ownable, PausableCrowdsale(false), TokensCappedCrowdsale(3) {
+contract ShackSale is Ownable, PausableCrowdsale(false), TokensCappedCrowdsale(ShackSale.TOKENS_CAP) {
   using SafeMath for uint256;
 
 // https://www.epochconverter.com/
   uint256 constant _decimals = 6; 
-  uint256 constant _duration  = 60; // default sale duration
-  uint256 constant _rate = 3 * 10**_decimals; // total of 6 decimals
+  uint256 constant _duration  = 60; // default sale duration in days
+  uint256 constant _rate = 200; // in USD cents per Ethereum
   address private constant _wallet    = 0x2999A54A61579d42E598F7F2171A06FC4609a2fC;
   address public remainingTokensWallet = 0x0D7257484F4d7847e74dc09d5454c31bbfc94165;
-  string  public constant crowdsaleTokenName = "SHAC for 5393 Meadowlark Dr. Huntington Beach CA 92649";
-  string  public constant crowdsaleTokenSymbol = "SHAC.CA.92649.Huntington_Beach.5393.Meadowlark_Dr";
+  string  public constant crowdsaleTokenName = "SHAC for 5394 Meadowlark Dr. Huntington Beach CA 92649";
+  string  public constant crowdsaleTokenSymbol = "SHAC.CA.92649.Huntington_Beach.5394.Meadowlark_Dr";
   string  public constant crowdfundedPropertyURL = "https://drive.google.com/open?id=1hSj4Rt7lU3nH0uDlH8Vfby6fif6bV8df";
-  uint256 constant _tokensCap = 15; // cap total property value in USD
+  uint256 constant TOKENS_CAP = 15 * 10**_decimals; // * _rate; // cap total property value in USD aka tokens
   uint256 constant _crowdsaleGoal = 6; // goal sufficient to cover current loans 
   uint256 public tokensGoal = 0; // goal sufficient to cover current loans in tokens with 6 decimal 
   uint256 public constant termMonths = 12;
 
   function ShackSale() public 
     Crowdsale(now + 1, now + 1 + (86400 * _duration), _rate, _wallet) {
-    require(_tokensCap > 0);
+    require(TOKENS_CAP > 0);
     require(_rate > 0);
-    require(_crowdsaleGoal > 0);
-    require(_crowdsaleGoal < _tokensCap);
+    tokensGoal = _crowdsaleGoal.mul(10**_decimals); // .mul(_rate); 
+    require(tokensGoal > 0);
+    require(tokensGoal < TOKENS_CAP);
     require(_duration >= 1);
     require(termMonths >= 1);
-
-    uint256 newCap = _tokensCap.mul(10**_decimals);
-    tokensGoal = _crowdsaleGoal.mul(10**_decimals); 
-    setCap(newCap);
   }
 
   enum Statuses { SaleInProgress, PendingApproval, Disapproved, Succeeded }
@@ -93,7 +90,7 @@ contract ShackSale is Ownable, PausableCrowdsale(false), TokensCappedCrowdsale(3
   * @param paramRate defines SHK/ETH rate: 1 ETH = paramRate SHKs
   */
   function setRate(uint256 paramRate) public onlyOwner {
-    require(paramRate != 0x0);
+    require(paramRate >= 1);
     rate = paramRate;
     RateChange(paramRate);
   }
