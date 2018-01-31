@@ -23,14 +23,14 @@ contract ShackSale is Ownable, PausableCrowdsale(false), TokensCappedCrowdsale(S
 // ------------------------------ Customize Smart Contract ------------------------------------- 
 //**********************************************************************************************
   uint256 constant _duration  = 60; // default crowd sale duration in days
-  uint256 constant _rate = 200; // in USD cents per Ethereum
+  uint256 constant _rate = 112640; // in USD cents per Ethereum
   address private constant _wallet    = 0x2999A54A61579d42E598F7F2171A06FC4609a2fC;
   address public remainingTokensWallet = 0x0D7257484F4d7847e74dc09d5454c31bbfc94165;
-  string  public constant crowdsaleTokenName = "SHAC for 5394 Meadowlark Dr. Huntington Beach CA 92649";
-  string  public constant crowdsaleTokenSymbol = "SHAC.CA.92649.Huntington_Beach.5394.Meadowlark_Dr";
+  string  public constant crowdsaleTokenName = "SHAC for 328 Monroe Irvine CA 92618";
+  string  public constant crowdsaleTokenSymbol = "SHK.CA.92618.Irvine.328.Monroe";
   string  public constant crowdfundedPropertyURL = "https://drive.google.com/open?id=1hSj4Rt7lU3nH0uDlH8Vfby6fif6bV8df";
-  uint256 public constant TOKENS_CAP = 15 * 10**_decimals; // total property value in USD aka tokens with 6 dec places
-  uint256 public constant tokensGoal = 6 * 10**_decimals; // goal sufficient to cover current loans in tokens with 6 decimal 
+  uint256 public constant TOKENS_CAP = 10165000000; // total property value in USD aka tokens with 6 dec places
+  uint256 public constant tokensGoal =  5243000000; // goal sufficient to cover current loans in tokens with 6 decimal 
   uint256 public constant termMonths = 12;
 //**********************************************************************************************
 
@@ -80,7 +80,7 @@ contract ShackSale is Ownable, PausableCrowdsale(false), TokensCappedCrowdsale(S
     require(beneficiary != 0x0);
     require(tokens > 0);
     require(now <= endTime);                               // Crowdsale (without startTime check)
-    require(token.totalSupply().add(tokens) <= tokensCap); // TokensCappedCrowdsale
+//    require(token.totalSupply().add(tokens) <= tokensCap); // TokensCappedCrowdsale, it will always be within the cap 
 
     token.mint(beneficiary, tokens);
   }

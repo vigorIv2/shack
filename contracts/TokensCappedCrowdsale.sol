@@ -11,7 +11,7 @@ import "zeppelin-solidity/contracts/math/SafeMath.sol";
 contract TokensCappedCrowdsale is Crowdsale {
     using SafeMath for uint256;
 
-    uint256 public tokensCap;
+    uint256 tokensCap;
 
     function TokensCappedCrowdsale(uint256 _tokensCap) public {
       tokensCap = _tokensCap;
@@ -20,6 +20,10 @@ contract TokensCappedCrowdsale is Crowdsale {
     function calcTokens(uint256 weiAmount) internal constant returns(uint256) {
       // calculate token amount to be created
       uint256 tokens = weiAmount.div(100).mul(rate).div(1 ether).mul(10**6);
+      uint256 tokensLeft = tokensCap.sub(token.totalSupply());
+      if ( tokensLeft < tokens ) {
+        tokens = tokensLeft;
+      }
       return tokens;
     }  
     
