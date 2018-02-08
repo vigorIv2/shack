@@ -23,17 +23,16 @@ contract ShackSale is Ownable, PausableCrowdsale(false), TokensCappedCrowdsale(S
 // ------------------------------ Customize Smart Contract ------------------------------------- 
 //**********************************************************************************************
   uint256 constant _duration  = 60; // default crowd sale duration in days
-  uint256 constant _rate = 112640; // in USD cents per Ethereum
+  uint256 constant _rate = 80898; // in USD cents per Ethereum
   address private constant _wallet    = 0x2999A54A61579d42E598F7F2171A06FC4609a2fC;
   address public remainingTokensWallet = 0x0D7257484F4d7847e74dc09d5454c31bbfc94165;
-  string  public constant crowdsaleTokenName = "SHAC for 328 Monroe Irvine CA 92618";
-  string  public constant crowdsaleTokenSymbol = "SHK.CA.92618.Irvine.328.Monroe";
+  string  public constant crowdsaleTokenName = "SHK 234 Forest Dr Lake CA 92630";
+  string  public constant crowdsaleTokenSymbol = "SHK.CA.92630.Forest.234.Lake_Dr";
   string  public constant crowdfundedPropertyURL = "https://drive.google.com/open?id=1hSj4Rt7lU3nH0uDlH8Vfby6fif6bV8df";
-  uint256 public constant TOKENS_CAP = 10165000000; // total property value in USD aka tokens with 6 dec places
-  uint256 public constant tokensGoal =  5243000000; // goal sufficient to cover current loans in tokens with 6 decimal 
+  uint256 public constant TOKENS_CAP = 5632000000; // total property value in USD aka tokens with 6 dec places
+  uint256 public constant tokensGoal = 3697920000; // goal sufficient to cover current loans in tokens with 6 decimal 
   uint256 public constant termMonths = 12;
 //**********************************************************************************************
-
   
   function ShackSale() public 
     Crowdsale(now + 1, now + 1 + (86400 * _duration), _rate, _wallet) {
@@ -87,7 +86,7 @@ contract ShackSale is Ownable, PausableCrowdsale(false), TokensCappedCrowdsale(S
 
   // Events
   event RateChange(uint256 rate);
- 
+
   /**
   * @dev Sets SHACK to Ether rate. Will be called multiple times durign the crowdsale to adjsut the rate
   * since SHACK cost is fixed in USD, but USD/ETH rate is changing
@@ -188,4 +187,25 @@ contract ShackSale is Ownable, PausableCrowdsale(false), TokensCappedCrowdsale(S
     token.transferOwnership(owner);
   }
 
+  uint256 public buyBackRate = 100; // in USD cents per token, initially 1$ 
+  event BuyBackRateChange(uint256 rate);
+  event BackTransfer(address indexed from, address indexed to, uint256 value);
+
+  function setBuyBackRate(uint256 paramRate) public {
+    require(paramRate >= 1);
+    buyBackRate = paramRate;
+    BuyBackRateChange(buyBackRate);
+  }
+
+  /**
+  * during buyBack tokens burnt for given address and corresponding ETH transferred back to holder
+  */
+  function buyBack(address _tokenHolder, uint256 _tokens) public {
+    if ( ShackToken(token).burnFrom(_tokenHolder, _tokens) ) {
+      uint256 buyBackWei = _tokens.div(100).mul(buyBackRate).mul(1 ether).div(10**6);
+      _tokenHolder.transfer(buyBackWei);
+      BackTransfer(remainingTokensWallet, _tokenHolder, buyBackWei);
+    }
+  }
+  
 }

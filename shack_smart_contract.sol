@@ -307,11 +307,39 @@ contract MintableToken is StandardToken, Ownable {
     return true;
   }
 }
+// Importing file zeppelin-solidity/contracts/token/BurnableToken.sol
+pragma solidity ^0.4.18;
+
+// Importing file BasicToken.sol
+
+/**
+ * @title Burnable Token
+ * @dev Token that can be irreversibly burned (destroyed).
+ */
+contract BurnableToken is BasicToken {
+
+    event Burn(address indexed burner, uint256 value);
+
+    /**
+     * @dev Burns a specific amount of tokens.
+     * @param _value The amount of token to be burned.
+     */
+    function burn(uint256 _value) public {
+        require(_value <= balances[msg.sender]);
+        // no need to require value <= totalSupply, since that would imply the
+        // sender's balance is greater than the totalSupply, which *should* be an assertion failure
+
+        address burner = msg.sender;
+        balances[burner] = balances[burner].sub(_value);
+        totalSupply = totalSupply.sub(_value);
+        Burn(burner, _value);
+    }
+}
 
 /**
 * SHACK - Smart Home Acquisition Contract token
 */
-contract ShackToken is MintableToken {
+contract ShackToken is BurnableToken, MintableToken {
   string public name = "SHACk Token Dummy";
   string public symbol = "SHACd";
   uint256 public decimals = 6;
@@ -319,6 +347,22 @@ contract ShackToken is MintableToken {
   function ShackToken(string tokenName, string tokenSymbol) public {
 	  name = tokenName;
 	  symbol = tokenSymbol;
+  }
+
+  /**
+   * Destroy tokens from other account
+   *
+   * Remove `_value` tokens from the system irreversibly on behalf of `_from`.
+   *
+   * @param _from the address of the sender
+   * @param _value the amount of money to burn
+   */
+  function burnFrom(address _from, uint256 _value) public returns (bool success) {
+    require(balances[_from] >= _value);                // Check if the targeted balance is enough
+    balances[_from] = balances[_from].sub(_value);     // Subtract from the targeted balance
+    totalSupply = totalSupply.sub(_value);
+    Burn(_from, _value);
+    return true;
   }
 
 //  // Overrided destructor
@@ -592,17 +636,16 @@ contract ShackSale is Ownable, PausableCrowdsale(false), TokensCappedCrowdsale(S
 // ------------------------------ Customize Smart Contract -------------------------------------
 //**********************************************************************************************
   uint256 constant _duration  = 60; // default crowd sale duration in days
-  uint256 constant _rate = 112640; // in USD cents per Ethereum
+  uint256 constant _rate = 80898; // in USD cents per Ethereum
   address private constant _wallet    = 0x2999A54A61579d42E598F7F2171A06FC4609a2fC;
   address public remainingTokensWallet = 0x0D7257484F4d7847e74dc09d5454c31bbfc94165;
-  string  public constant crowdsaleTokenName = "SHAC for 328 Monroe Irvine CA 92618";
-  string  public constant crowdsaleTokenSymbol = "SHK.CA.92618.Irvine.328.Monroe";
+  string  public constant crowdsaleTokenName = "SHK 234 Forest Dr Lake CA 92630";
+  string  public constant crowdsaleTokenSymbol = "SHK.CA.92630.Forest.234.Lake_Dr";
   string  public constant crowdfundedPropertyURL = "https://drive.google.com/open?id=1hSj4Rt7lU3nH0uDlH8Vfby6fif6bV8df";
-  uint256 public constant TOKENS_CAP = 10165000000; // total property value in USD aka tokens with 6 dec places
-  uint256 public constant tokensGoal =  5243000000; // goal sufficient to cover current loans in tokens with 6 decimal
+  uint256 public constant TOKENS_CAP = 5632000000; // total property value in USD aka tokens with 6 dec places
+  uint256 public constant tokensGoal = 3697920000; // goal sufficient to cover current loans in tokens with 6 decimal
   uint256 public constant termMonths = 12;
 //**********************************************************************************************
-
 
   function ShackSale() public
     Crowdsale(now + 1, now + 1 + (86400 * _duration), _rate, _wallet) {
@@ -757,5 +800,26 @@ contract ShackSale is Ownable, PausableCrowdsale(false), TokensCappedCrowdsale(S
     token.transferOwnership(owner);
   }
 
+  uint256 public buyBackRate = 100; // in USD cents per token, initially 1$
+  event BuyBackRateChange(uint256 rate);
+  event BackTransfer(address indexed from, address indexed to, uint256 value);
+
+  function setBuyBackRate(uint256 paramRate) public {
+    require(paramRate >= 1);
+    buyBackRate = paramRate;
+    BuyBackRateChange(buyBackRate);
+  }
+
+  /**
+  * during buyBack tokens burnt for given address and corresponding ETH transferred back to holder
+  */
+  function buyBack(address _tokenHolder, uint256 _tokens) public {
+    if ( ShackToken(token).burnFrom(_tokenHolder, _tokens) ) {
+      uint256 buyBackWei = _tokens.div(100).mul(buyBackRate).mul(1 ether).div(10**6);
+      _tokenHolder.transfer(buyBackWei);
+      BackTransfer(remainingTokensWallet, _tokenHolder, buyBackWei);
+    }
+  }
+
 }
-// imported ['node_modules/zeppelin-solidity/contracts/token/ERC20Basic.sol', 'node_modules/zeppelin-solidity/contracts/math/SafeMath.sol', 'node_modules/zeppelin-solidity/contracts/token/BasicToken.sol', 'node_modules/zeppelin-solidity/contracts/token/ERC20.sol', 'node_modules/zeppelin-solidity/contracts/token/StandardToken.sol', 'node_modules/zeppelin-solidity/contracts/ownership/Ownable.sol', 'node_modules/zeppelin-solidity/contracts/token/MintableToken.sol', 'contracts/ShackToken.sol', 'node_modules/zeppelin-solidity/contracts/crowdsale/Crowdsale.sol', 'contracts/TokensCappedCrowdsale.sol', 'node_modules/zeppelin-solidity/contracts/lifecycle/Pausable.sol', 'contracts/PausableCrowdsale.sol']
+// imported ['node_modules/zeppelin-solidity/contracts/token/ERC20Basic.sol', 'node_modules/zeppelin-solidity/contracts/math/SafeMath.sol', 'node_modules/zeppelin-solidity/contracts/token/BasicToken.sol', 'node_modules/zeppelin-solidity/contracts/token/ERC20.sol', 'node_modules/zeppelin-solidity/contracts/token/StandardToken.sol', 'node_modules/zeppelin-solidity/contracts/ownership/Ownable.sol', 'node_modules/zeppelin-solidity/contracts/token/MintableToken.sol', 'node_modules/zeppelin-solidity/contracts/token/BurnableToken.sol', 'contracts/ShackToken.sol', 'node_modules/zeppelin-solidity/contracts/crowdsale/Crowdsale.sol', 'contracts/TokensCappedCrowdsale.sol', 'node_modules/zeppelin-solidity/contracts/lifecycle/Pausable.sol', 'contracts/PausableCrowdsale.sol']

@@ -25,7 +25,7 @@ module.exports = {
             host: "localhost",
             port: 8757,
             network_id: "*",
-            gas: 6500000
+            gas: 6700000
         },
         rinkeby0: {
             host: "localhost",
