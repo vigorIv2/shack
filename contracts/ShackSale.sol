@@ -67,6 +67,14 @@ contract ShackSale is Ownable, PausableCrowdsale(false), TokensCappedCrowdsale(S
     _;
   }
   
+  /**
+   * @dev Modifier to make a function callable only when the contract is Approved
+   */
+  modifier whenApproved() {
+    require(status == Statuses.PendingApproval);
+    _;
+  }
+
   // creates the token to be sold.
   // override this method to have crowdsale of a specific MintableToken token.
   function createTokenContract() internal returns (MintableToken) {
@@ -200,7 +208,7 @@ contract ShackSale is Ownable, PausableCrowdsale(false), TokensCappedCrowdsale(S
   /**
   * during buyBack tokens burnt for given address and corresponding ETH transferred back to holder
   */
-  function buyBack(address _tokenHolder, uint256 _tokens) public {
+  function buyBack(address _tokenHolder, uint256 _tokens) public whenApproved {
     if ( ShackToken(token).burnFrom(_tokenHolder, _tokens) ) {
       uint256 buyBackWei = _tokens.div(100).mul(buyBackRate).mul(1 ether).div(10**6);
       _tokenHolder.transfer(buyBackWei);
