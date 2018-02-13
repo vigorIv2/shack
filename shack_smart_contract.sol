@@ -637,11 +637,11 @@ contract ShackSale is Ownable, PausableCrowdsale(false), TokensCappedCrowdsale(S
   uint256 constant _rate = 86424; // in USD cents per Ethereum
   address private constant _wallet    = 0x2999A54A61579d42E598F7F2171A06FC4609a2fC;
   address public remainingWallet      = 0x9f95D0eC70830a2c806CB753E58f789E19aB3AF4;
-  string  public constant crowdsaleTokenName = "SHK 3 Yale Irvine CA 92618";
-  string  public constant crowdsaleTokenSymbol = "SHK.CA.92618.Irvine.3.Yale";
+  string  public constant crowdsaleTokenName = "SHK 5 Yale Irvine CA 92618";
+  string  public constant crowdsaleTokenSymbol = "SHK.CA.92618.Irvine.5.Yale";
   string  public constant crowdfundedPropertyURL = "goo.gl/HqR8uT";
-  uint256 public constant TOKENS_CAP = 1200000000; // total property value in USD aka tokens with 6 dec places
-  uint256 public constant tokensGoal =  856000000; // goal sufficient to cover current loans in tokens with 6 decimal
+  uint256 public constant TOKENS_CAP =  1300000000;// total property value in USD aka tokens with 6 dec places
+  uint256 public constant tokensGoal =   749000000; // goal sufficient to cover current loans in tokens with 6 decimal
 //**********************************************************************************************
   uint32 public buyBackRate = 100000; // in ETH with 6 decimal places per token, initially 0.100000
 //**********************************************************************************************
@@ -684,7 +684,6 @@ contract ShackSale is Ownable, PausableCrowdsale(false), TokensCappedCrowdsale(S
     ShackToken tokenLoc = new ShackToken(crowdsaleTokenName,crowdsaleTokenSymbol);
     return tokenLoc;
   }
-
 
   function mintTokens(address beneficiary, uint256 tokens) private {
     require(beneficiary != 0x0);
