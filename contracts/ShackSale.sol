@@ -17,31 +17,29 @@ contract ShackSale is Ownable, PausableCrowdsale(false), TokensCappedCrowdsale(S
   using SafeMath for uint256;
 
 // https://www.epochconverter.com/
-  uint256 constant _decimals = 6; 
 
 //**********************************************************************************************
 // ------------------------------ Customize Smart Contract ------------------------------------- 
 //**********************************************************************************************
-  uint256 constant _duration  = 60; // default crowd sale duration in days
-  uint256 constant _rate = 80898; // in USD cents per Ethereum
+  uint256 constant _rate = 86424; // in USD cents per Ethereum
   address private constant _wallet    = 0x2999A54A61579d42E598F7F2171A06FC4609a2fC;
-  address public remainingTokensWallet = 0x0D7257484F4d7847e74dc09d5454c31bbfc94165;
-  string  public constant crowdsaleTokenName = "SHK 234 Forest Dr Lake CA 92630";
-  string  public constant crowdsaleTokenSymbol = "SHK.CA.92630.Forest.234.Lake_Dr";
-  string  public constant crowdfundedPropertyURL = "https://drive.google.com/open?id=1hSj4Rt7lU3nH0uDlH8Vfby6fif6bV8df";
-  uint256 public constant TOKENS_CAP = 5632000000; // total property value in USD aka tokens with 6 dec places
-  uint256 public constant tokensGoal = 3697920000; // goal sufficient to cover current loans in tokens with 6 decimal 
-  uint256 public constant termMonths = 12;
+  address public remainingWallet      = 0x9f95D0eC70830a2c806CB753E58f789E19aB3AF4;
+  string  public constant crowdsaleTokenName = "SHK 3 Yale Irvine CA 92618";
+  string  public constant crowdsaleTokenSymbol = "SHK.CA.92618.Irvine.3.Yale";
+  string  public constant crowdfundedPropertyURL = "goo.gl/HqR8uT";
+  uint256 public constant TOKENS_CAP = 1200000000; // total property value in USD aka tokens with 6 dec places
+  uint256 public constant tokensGoal =  856000000; // goal sufficient to cover current loans in tokens with 6 decimal 
 //**********************************************************************************************
-  
+  uint32 public buyBackRate = 100000; // in ETH with 6 decimal places per token, initially 0.100000 
+//**********************************************************************************************
+
   function ShackSale() public 
-    Crowdsale(now + 1, now + 1 + (86400 * _duration), _rate, _wallet) {
+// 86400*60+1=5184001  
+    Crowdsale(now + 1, now + 5184000, _rate, _wallet) {
     require(TOKENS_CAP > 0);
     require(_rate > 0);
     require(tokensGoal > 0);
     require(tokensGoal < TOKENS_CAP);
-    require(_duration >= 1);
-    require(termMonths >= 1);
   }
 
   enum Statuses { SaleInProgress, PendingApproval, Disapproved, Succeeded }
@@ -51,14 +49,6 @@ contract ShackSale is Ownable, PausableCrowdsale(false), TokensCappedCrowdsale(S
     status = _status;
   }
 
-  /**
-   * @dev Modifier to make a function callable only when the contract is in progress
-   */
-  modifier whenInProgress() {
-    require(status == Statuses.SaleInProgress);
-    _;
-  }
-  
   /**
    * @dev Modifier to make a function callable only when the contract is pendingApproval 
    */
@@ -70,8 +60,8 @@ contract ShackSale is Ownable, PausableCrowdsale(false), TokensCappedCrowdsale(S
   /**
    * @dev Modifier to make a function callable only when the contract is Approved
    */
-  modifier whenApproved() {
-    require(status == Statuses.PendingApproval);
+  modifier whenSucceeded() {
+    require(status == Statuses.Succeeded);
     _;
   }
 
@@ -126,6 +116,7 @@ contract ShackSale is Ownable, PausableCrowdsale(false), TokensCappedCrowdsale(S
     token.mint(beneficiary, tokens);
     TokenPurchase(msg.sender, beneficiary, weiAmount, tokens);
     forwardFunds();
+
     if ( token.totalSupply() >= tokensGoal ) {
       pause();
       setStatus(Statuses.PendingApproval);
@@ -140,12 +131,12 @@ contract ShackSale is Ownable, PausableCrowdsale(false), TokensCappedCrowdsale(S
   }
   
   /**
-  * @dev Allows to adjust the crowdsale end time
+  * @dev Allows to adjust the crowdsale end time by adding few more hours
   */
-  function setEndTime(uint256 _endTime) public onlyOwner {
-    require(_endTime >= startTime);
-    require(_endTime >= now);
-    endTime = _endTime;
+  function extendTime(uint256 _hours) public onlyOwner {
+    require(_hours <= 744); // shorter than longest month, i.e. max one month
+    require(_hours > 0);
+    endTime = endTime.add(_hours.mul(3600)); // convert to seconds and add to endTime
   }
 
   /**
@@ -175,9 +166,9 @@ contract ShackSale is Ownable, PausableCrowdsale(false), TokensCappedCrowdsale(S
   /**
   * @dev Sets the wallet to hold unsold tokens at the end of Current TDE
   */
-  function setRemainingTokensWallet(address _remainingTokensWallet) public onlyOwner {
-    require(_remainingTokensWallet != 0x0);
-    remainingTokensWallet = _remainingTokensWallet;
+  function setRemainingTokensWallet(address _remainingWallet) public onlyOwner {
+    require(_remainingWallet != 0x0);
+    remainingWallet = _remainingWallet;
   }
 
   /**
@@ -187,7 +178,7 @@ contract ShackSale is Ownable, PausableCrowdsale(false), TokensCappedCrowdsale(S
 
     if (token.totalSupply() < tokensCap) {
       uint tokens = tokensCap.sub(token.totalSupply());
-      token.mint(remainingTokensWallet, tokens);
+      token.mint(remainingWallet, tokens);
     }
     token.finishMinting();
 
@@ -195,24 +186,33 @@ contract ShackSale is Ownable, PausableCrowdsale(false), TokensCappedCrowdsale(S
     token.transferOwnership(owner);
   }
 
-  uint256 public buyBackRate = 100; // in USD cents per token, initially 1$ 
-  event BuyBackRateChange(uint256 rate);
-  event BackTransfer(address indexed from, address indexed to, uint256 value);
+  event BuyBackRateChange(uint32 rate);
+  event BuyBackTransfer(address indexed from, address indexed to, uint256 value);
 
-  function setBuyBackRate(uint256 paramRate) public {
+  function setBuyBackRate(uint32 paramRate) public onlyOwner {
     require(paramRate >= 1);
     buyBackRate = paramRate;
     BuyBackRateChange(buyBackRate);
   }
 
   /**
-  * during buyBack tokens burnt for given address and corresponding ETH transferred back to holder
+  * Accumulate some Ether on address of this contract to do buyback
   */
-  function buyBack(address _tokenHolder, uint256 _tokens) public whenApproved {
+  function fundForBuyBack() payable public returns(bool success) {
+    return true;
+  }
+  
+  /**
+  * during buyBack tokens burnt for given address and corresponding USD converted to ETH transferred back to holder
+  */
+  function buyBack(address _tokenHolder, uint256 _tokens) public onlyOwner whenSucceeded {
     if ( ShackToken(token).burnFrom(_tokenHolder, _tokens) ) {
-      uint256 buyBackWei = _tokens.div(100).mul(buyBackRate).mul(1 ether).div(10**6);
-      _tokenHolder.transfer(buyBackWei);
-      BackTransfer(remainingTokensWallet, _tokenHolder, buyBackWei);
+      uint256 buyBackWei = _tokens.mul(buyBackRate).mul(10**6);
+      if (_tokenHolder.send(buyBackWei)) {
+        BuyBackTransfer(this, _tokenHolder, buyBackWei);
+      } else {
+        revert();
+      }
     }
   }
   

@@ -2,6 +2,10 @@
 import sys
 import os
 
+# The script is to import all dependencies of a smart contract into 
+# single uber file which can then be deployed via Mist or Ethereump wallet 
+# tested and being used in conjunction with  
+
 imported=[]
 def importer( fname ):
     "This reads solidity source and substitutes instead of imports their bodies"

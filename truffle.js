@@ -25,9 +25,17 @@ module.exports = {
             host: "localhost",
             port: 8757,
             network_id: "*",
-            gas: 6700000
-        },
-        rinkeby0: {
+            gas: 6721900
+//            gas: 6721976
+        }, 
+        ganache: {
+            host: "localhost",
+            port: 7545,
+            network_id: 5777,
+//            gas: 6721900
+//            gas: 6721976
+        }, 
+         rinkeby0: {
             host: "localhost",
             port: 8545,
             network_id: 4,
