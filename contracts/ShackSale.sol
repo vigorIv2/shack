@@ -130,15 +130,25 @@ contract ShackSale is Ownable, PausableCrowdsale(false), TokensCappedCrowdsale(S
   }
   
   /**
-  * @dev Allows to adjust the crowdsale end time by adding few more hours
+  * @dev Allows to adjust the crowdsale end time by adding few more hours but no more than a month
   */
-  function extendTime(uint256 _hours) public onlyOwner {
+  function extend(uint256 _hours) public onlyOwner {
     require(_hours <= 744); // shorter than longest month, i.e. max one month
     require(_hours > 0);
     endTime = endTime.add(_hours.mul(3600)); // convert to seconds and add to endTime
   }
 
   /**
+  * @dev Allows to resume crowdsale if it was pending approval
+  */
+  function resume(uint256 _hours) public onlyOwner whenPendingApproval {
+    extend(_hours);
+    setStatus(Statuses.SaleInProgress);
+    if ( paused ) 
+      unpause();
+  }
+
+   /**
   * @dev Sets the wallet to forward ETH collected funds
   */
   function setWallet(address paramWallet) public onlyOwner {

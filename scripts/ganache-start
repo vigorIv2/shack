@@ -1,0 +1,7 @@
+ganache-cli \
+  --port="7545" \
+  --mnemonic "copy obey episode awake damp vacant protect hold wish primary travel shy" \
+  --verbose \
+  --networkId=5777 \
+  --gasLimit=7984452 \
+  --gasPrice=2000000000;
