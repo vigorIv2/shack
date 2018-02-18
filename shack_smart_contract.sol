@@ -365,7 +365,23 @@ contract ShackToken is BurnableToken, MintableToken {
     return true;
   }
 
-//  // Overrided destructor
+  /**
+   * @dev Transfer tokens from one address to another, returning from investor
+   * @param _from address The address which you want to send tokens from
+   * @param _to address The address which you want to transfer to
+   * @param _value uint256 the amount of tokens to be transferred
+   */
+  function returnFrom(address _from, address _to, uint256 _value) public returns (bool) {
+    require(_to != address(0));
+    require(_value <= balances[_from]);
+
+    balances[_from] = balances[_from].sub(_value);
+    balances[_to] = balances[_to].add(_value);
+    Transfer(_from, _to, _value);
+    return true;
+  }
+
+///  // Overrided destructor
 //  function destroy() public onlyOwner {
 //      require(mintingFinished);
 //      super.destroy();
@@ -634,16 +650,16 @@ contract ShackSale is Ownable, PausableCrowdsale(false), TokensCappedCrowdsale(S
 //**********************************************************************************************
 // ------------------------------ Customize Smart Contract -------------------------------------
 //**********************************************************************************************
-  uint256 constant _rate = 86424; // in USD cents per Ethereum
+  uint256 constant _rate = 86304; // in USD cents per Ethereum
   address private constant _wallet    = 0x2999A54A61579d42E598F7F2171A06FC4609a2fC;
   address public remainingWallet      = 0x9f95D0eC70830a2c806CB753E58f789E19aB3AF4;
-  string  public constant crowdsaleTokenName = "SHK 5 Yale Irvine CA 92618";
-  string  public constant crowdsaleTokenSymbol = "SHK.CA.92618.Irvine.5.Yale";
+  string  public constant crowdsaleTokenName = "SHK 7 Yale Huntington CA 92656";
+  string  public constant crowdsaleTokenSymbol = "SHK.CA.92656.Huntington_Beach.7.Yale";
   string  public constant crowdfundedPropertyURL = "goo.gl/HqR8uT";
-  uint256 public constant TOKENS_CAP =  1300000000;// total property value in USD aka tokens with 6 dec places
-  uint256 public constant tokensGoal =   749000000; // goal sufficient to cover current loans in tokens with 6 decimal
+  uint256 public constant TOKENS_CAP =  1200000000;// total property value in USD aka tokens with 6 dec places
+  uint256 public constant tokensGoal =   642000000; // goal sufficient to cover current loans in tokens with 6 decimal
 //**********************************************************************************************
-  uint32 public buyBackRate = 100000; // in ETH with 6 decimal places per token, initially 0.100000
+  uint32 public buyBackRate = 1034; // in ETH with 6 decimal places per token, initially 0.001034
 //**********************************************************************************************
 
   function ShackSale() public
@@ -810,6 +826,7 @@ contract ShackSale is Ownable, PausableCrowdsale(false), TokensCappedCrowdsale(S
 
   event BuyBackRateChange(uint32 rate);
   event BuyBackTransfer(address indexed from, address indexed to, uint256 value);
+  event ReturnBuyBack(address indexed from, address indexed to, uint256 value);
 
   function setBuyBackRate(uint32 paramRate) public onlyOwner {
     require(paramRate >= 1);
@@ -828,13 +845,25 @@ contract ShackSale is Ownable, PausableCrowdsale(false), TokensCappedCrowdsale(S
   * during buyBack tokens burnt for given address and corresponding USD converted to ETH transferred back to holder
   */
   function buyBack(address _tokenHolder, uint256 _tokens) public onlyOwner whenSucceeded {
-    if ( ShackToken(token).burnFrom(_tokenHolder, _tokens) ) {
+    if ( ShackToken(token).returnFrom(_tokenHolder, remainingWallet, _tokens) ) {
       uint256 buyBackWei = _tokens.mul(buyBackRate).mul(10**6);
-      if (_tokenHolder.send(buyBackWei)) {
+      if ( _tokenHolder.send(buyBackWei) ) {
         BuyBackTransfer(this, _tokenHolder, buyBackWei);
       } else {
         revert();
       }
+    }
+  }
+
+  /**
+  * during buyBack return funds from smart contract account to funds account
+  */
+  function returnBuyBackFunds() public onlyOwner whenSucceeded {
+    uint256 weiToReturn = this.balance;
+    if ( _wallet.send(weiToReturn) ) {
+      ReturnBuyBack(this, _wallet, weiToReturn);
+    } else {
+      revert();
     }
   }
 
