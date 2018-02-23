@@ -655,7 +655,7 @@ contract ShackSale is Ownable, PausableCrowdsale(false), TokensCappedCrowdsale(S
   address public remainingWallet      = 0x9f95D0eC70830a2c806CB753E58f789E19aB3AF4;
   string  public constant crowdsaleTokenName = "SHK 7 Yale Huntington CA 92656";
   string  public constant crowdsaleTokenSymbol = "SHK.CA.92656.Huntington_Beach.7.Yale";
-  string  public constant crowdfundedPropertyURL = "goo.gl/HqR8uT";
+  string  public constant crowdfundedPropertyURL = "https://goo.gl/SwuRP4";
   uint256 public constant TOKENS_CAP =  1200000000;// total property value in USD aka tokens with 6 dec places
   uint256 public constant tokensGoal =   642000000; // goal sufficient to cover current loans in tokens with 6 decimal
 //**********************************************************************************************
