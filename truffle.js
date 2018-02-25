@@ -30,7 +30,7 @@ module.exports = {
         }, 
         ganache: {
             host: "localhost",
-            port: 7545,
+            port: 7546,
             network_id: 5777,
             gas: 7984452 
 //            gas: 6721976

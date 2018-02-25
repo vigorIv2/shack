@@ -58,7 +58,7 @@ function saveContracts() {
   var data = activeRange.getValues();
   var genCnt = 0;
   for (var r = 0 ; r < data.length ; r++) {
-    var tokenId = data[r][13];
+    var tokenId = data[r][14].toString().replace(/[\ _\.]*$/, "" );
     if ( tokenId.indexOf("SHK.") == 0 ) { // for non empty data rows only 
       var subfolder = folderByName(folder,tokenId);
       if ( subfolder == null ) { // subfolder did not exist, create it and populate 
@@ -70,11 +70,12 @@ function saveContracts() {
       var fileName = "contract_"+tokenId+ ".sol";
       var file = fileByName(subfolder,fileName);
       if ( file == null ) {
-        var rate = data[r][7];
+        var rate = data[r][7].toString().replace(/\.[\d]*/, "" );
         var fundAcc = data[r][10];
         var tokenAcc = data[r][11];
-        var tokenCap = data[r][14];
-        var tokenGoal = data[r][15];
+        var term = data[r][13];
+        var tokenCap = data[r][15].toString().replace(/\.[\d]*/, "" );
+        var tokenGoal = data[r][16].toString().replace(/\.[\d]*/, "" );
         Logger.log("TokenId="+tokenId+" rate="+rate+" fundAcc="+fundAcc+" tokenAcc="+tokenAcc+" tokenCap="+tokenCap+" tokenGoal="+tokenGoal);
         var contractSrc = "";
         for (var l = 0; l <= templateLines.length; l++) {
@@ -88,7 +89,7 @@ function saveContracts() {
           nl=nl.replace(/\_rate\ =\ [\d]*.*;/, "_rate = "+rate+"; // upd "  );
           nl=nl.replace(/\_wallet\ *=\ *.*;/, "_wallet = "+fundAcc+"; // upd " );
           nl=nl.replace(/remainingWallet\ *=\ *.*;/, "remainingWallet = "+tokenAcc+"; // upd " );
-          nl=nl.replace(/crowdsaleTokenName\ *=\ \"*.*\";/, "crowdsaleTokenName = \""+tokenId+"\"; // upd " );
+          nl=nl.replace(/crowdsaleTokenName\ *=\ \"*.*\";/, "crowdsaleTokenName = \""+tokenId+" ("+term+"m)\"; // upd " );
           nl=nl.replace(/crowdsaleTokenSymbol\ *=\ \"*.*\";/, "crowdsaleTokenSymbol = \""+tokenId+"\"; // upd " );
           nl=nl.replace(/TOKENS\_CAP\ *=\ *[\d]*.*;/, "TOKENS_CAP = "+tokenCap+"; // upd " );
           nl=nl.replace(/tokensGoal\ *=\ *[\d]*.*;/, "tokensGoal = "+tokenGoal+"; // upd " );

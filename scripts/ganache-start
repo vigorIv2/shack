@@ -1,5 +1,5 @@
 ganache-cli \
-  --port="7545" \
+  --port="7546" \
   --mnemonic "copy obey episode awake damp vacant protect hold wish primary travel shy" \
   --verbose \
   --networkId=5777 \

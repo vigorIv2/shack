@@ -159,7 +159,7 @@ contract ShackSale is Ownable, PausableCrowdsale(false), TokensCappedCrowdsale(S
   /**
   *  allows to approve the sale if goal in dollars reached, or other admin reasons
   */
-  function approve() public whenPendingApproval {
+  function approve() public onlyOwner whenPendingApproval {
     setStatus(Statuses.Succeeded);
     conclude();
   }
@@ -167,7 +167,7 @@ contract ShackSale is Ownable, PausableCrowdsale(false), TokensCappedCrowdsale(S
   /**
   * allows to disapprove the sale if goal in dollars not reached, or other admin reasons
   */
-  function disapprove() public whenPendingApproval {
+  function disapprove() public onlyOwner whenPendingApproval {
     setStatus(Statuses.Disapproved);
     conclude();
   }
@@ -208,7 +208,7 @@ contract ShackSale is Ownable, PausableCrowdsale(false), TokensCappedCrowdsale(S
   /**
   * Accumulate some Ether on address of this contract to do buyback
   */
-  function fundForBuyBack() payable public whenSucceeded returns(bool success) {
+  function fundForBuyBack() payable public onlyOwner whenSucceeded returns(bool success) {
     return true;
   }
   

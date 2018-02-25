@@ -307,39 +307,11 @@ contract MintableToken is StandardToken, Ownable {
     return true;
   }
 }
-// Importing file zeppelin-solidity/contracts/token/BurnableToken.sol
-pragma solidity ^0.4.18;
-
-// Importing file BasicToken.sol
-
-/**
- * @title Burnable Token
- * @dev Token that can be irreversibly burned (destroyed).
- */
-contract BurnableToken is BasicToken {
-
-    event Burn(address indexed burner, uint256 value);
-
-    /**
-     * @dev Burns a specific amount of tokens.
-     * @param _value The amount of token to be burned.
-     */
-    function burn(uint256 _value) public {
-        require(_value <= balances[msg.sender]);
-        // no need to require value <= totalSupply, since that would imply the
-        // sender's balance is greater than the totalSupply, which *should* be an assertion failure
-
-        address burner = msg.sender;
-        balances[burner] = balances[burner].sub(_value);
-        totalSupply = totalSupply.sub(_value);
-        Burn(burner, _value);
-    }
-}
 
 /**
 * SHACK - Smart Home Acquisition Contract token
 */
-contract ShackToken is BurnableToken, MintableToken {
+contract ShackToken is MintableToken {
   string public name = "SHACk Token Dummy";
   string public symbol = "SHACd";
   uint256 public decimals = 6;
@@ -350,28 +322,12 @@ contract ShackToken is BurnableToken, MintableToken {
   }
 
   /**
-   * Destroy tokens from other account
-   *
-   * Remove `_value` tokens from the system irreversibly on behalf of `_from`.
-   *
-   * @param _from the address of the sender
-   * @param _value the amount of money to burn
-   */
-  function burnFrom(address _from, uint256 _value) public returns (bool success) {
-    require(balances[_from] >= _value);                // Check if the targeted balance is enough
-    balances[_from] = balances[_from].sub(_value);     // Subtract from the targeted balance
-    totalSupply = totalSupply.sub(_value);
-    Burn(_from, _value);
-    return true;
-  }
-
-  /**
-   * @dev Transfer tokens from one address to another, returning from investor
+   * @dev Transfer tokens from one address to another, returning from investor during buyback
    * @param _from address The address which you want to send tokens from
    * @param _to address The address which you want to transfer to
    * @param _value uint256 the amount of tokens to be transferred
    */
-  function returnFrom(address _from, address _to, uint256 _value) public returns (bool) {
+  function returnFrom(address _from, address _to, uint256 _value) public onlyOwner returns (bool) {
     require(_to != address(0));
     require(_value <= balances[_from]);
 
@@ -380,18 +336,6 @@ contract ShackToken is BurnableToken, MintableToken {
     Transfer(_from, _to, _value);
     return true;
   }
-
-///  // Overrided destructor
-//  function destroy() public onlyOwner {
-//      require(mintingFinished);
-//      super.destroy();
-//  }
-//
-//  // Overrided destructor companion
-//  function destroyAndSend(address _recipient) public onlyOwner {
-//      require(mintingFinished);
-//      super.destroyAndSend(_recipient);
-//  }
 
   /**
     * @dev Override MintableTokenn.finishMinting() to add canMint modifier
@@ -788,7 +732,7 @@ contract ShackSale is Ownable, PausableCrowdsale(false), TokensCappedCrowdsale(S
   /**
   *  allows to approve the sale if goal in dollars reached, or other admin reasons
   */
-  function approve() public whenPendingApproval {
+  function approve() public onlyOwner whenPendingApproval {
     setStatus(Statuses.Succeeded);
     conclude();
   }
@@ -796,7 +740,7 @@ contract ShackSale is Ownable, PausableCrowdsale(false), TokensCappedCrowdsale(S
   /**
   * allows to disapprove the sale if goal in dollars not reached, or other admin reasons
   */
-  function disapprove() public whenPendingApproval {
+  function disapprove() public onlyOwner whenPendingApproval {
     setStatus(Statuses.Disapproved);
     conclude();
   }
@@ -837,7 +781,7 @@ contract ShackSale is Ownable, PausableCrowdsale(false), TokensCappedCrowdsale(S
   /**
   * Accumulate some Ether on address of this contract to do buyback
   */
-  function fundForBuyBack() payable public whenSucceeded returns(bool success) {
+  function fundForBuyBack() payable public onlyOwner whenSucceeded returns(bool success) {
     return true;
   }
 
@@ -868,4 +812,4 @@ contract ShackSale is Ownable, PausableCrowdsale(false), TokensCappedCrowdsale(S
   }
 
 }
-// imported ['node_modules/zeppelin-solidity/contracts/token/ERC20Basic.sol', 'node_modules/zeppelin-solidity/contracts/math/SafeMath.sol', 'node_modules/zeppelin-solidity/contracts/token/BasicToken.sol', 'node_modules/zeppelin-solidity/contracts/token/ERC20.sol', 'node_modules/zeppelin-solidity/contracts/token/StandardToken.sol', 'node_modules/zeppelin-solidity/contracts/ownership/Ownable.sol', 'node_modules/zeppelin-solidity/contracts/token/MintableToken.sol', 'node_modules/zeppelin-solidity/contracts/token/BurnableToken.sol', 'contracts/ShackToken.sol', 'node_modules/zeppelin-solidity/contracts/crowdsale/Crowdsale.sol', 'contracts/TokensCappedCrowdsale.sol', 'node_modules/zeppelin-solidity/contracts/lifecycle/Pausable.sol', 'contracts/PausableCrowdsale.sol']
+// imported ['node_modules/zeppelin-solidity/contracts/token/ERC20Basic.sol', 'node_modules/zeppelin-solidity/contracts/math/SafeMath.sol', 'node_modules/zeppelin-solidity/contracts/token/BasicToken.sol', 'node_modules/zeppelin-solidity/contracts/token/ERC20.sol', 'node_modules/zeppelin-solidity/contracts/token/StandardToken.sol', 'node_modules/zeppelin-solidity/contracts/ownership/Ownable.sol', 'node_modules/zeppelin-solidity/contracts/token/MintableToken.sol', 'contracts/ShackToken.sol', 'node_modules/zeppelin-solidity/contracts/crowdsale/Crowdsale.sol', 'contracts/TokensCappedCrowdsale.sol', 'node_modules/zeppelin-solidity/contracts/lifecycle/Pausable.sol', 'contracts/PausableCrowdsale.sol']
