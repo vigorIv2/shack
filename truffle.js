@@ -52,8 +52,7 @@ module.exports = {
 //          gasPrice: web3.toWei("20", "gwei"),
 //          network_id: "3",
 //        },
-
-      rinkeby: {
+        rinkeby: {
           provider: rinkebyProvider,
           // You can get the current gasLimit by running
           // truffle deploy --network rinkeby

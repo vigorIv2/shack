@@ -19,7 +19,7 @@ contract TokensCappedCrowdsale is Crowdsale {
 
     function calcTokens(uint256 weiAmount) internal constant returns(uint256) {
       // calculate token amount to be created
-      uint256 tokens = weiAmount.mul(rate).mul(10**6).div(100).div(1 ether);
+      uint256 tokens = weiAmount.div(100).mul(rate).div(1 ether).mul(10**6);
       uint256 tokensLeft = tokensCap.sub(token.totalSupply());
       if ( tokensLeft < tokens ) {
         tokens = tokensLeft;
