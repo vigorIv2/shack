@@ -21,16 +21,16 @@ contract ShackSale is Ownable, PausableCrowdsale(false), TokensCappedCrowdsale(S
 //**********************************************************************************************
 // ------------------------------ Customize Smart Contract ------------------------------------- 
 //**********************************************************************************************
-  uint256 constant _rate = 86840; // in USD cents per Ethereum
+  uint256 constant _rate = 86304; // in USD cents per Ethereum
   address private constant _wallet    = 0x2999A54A61579d42E598F7F2171A06FC4609a2fC;
   address public remainingWallet      = 0x9f95D0eC70830a2c806CB753E58f789E19aB3AF4;
-  string  public constant crowdsaleTokenName = "SHK 9 Yale Huntington CA 92656";
-  string  public constant crowdsaleTokenSymbol = "SHK.CA.92656.Huntington_Beach.9.Yale";
+  string  public constant crowdsaleTokenName = "SHK 7 Yale Huntington CA 92656";
+  string  public constant crowdsaleTokenSymbol = "SHK.CA.92656.Huntington_Beach.7.Yale";
   string  public constant crowdfundedPropertyURL = "https://goo.gl/SwuRP4";
-  uint256 public constant TOKENS_CAP =  679650;// total property value in USD aka tokens with 6 dec places
-  uint256 public constant tokensGoal =  361065; // goal sufficient to cover current loans in tokens with 6 decimal 
+  uint256 public constant TOKENS_CAP =  1200000000;// total property value in USD aka tokens with 6 dec places
+  uint256 public constant tokensGoal =   642000000; // goal sufficient to cover current loans in tokens with 6 decimal 
 //**********************************************************************************************
-  uint256 public buyBackRate = 1034; // in ETH with 6 decimal places per token, initially 0.001034
+  uint32 public buyBackRate = 1034; // in ETH with 6 decimal places per token, initially 0.001034
 //**********************************************************************************************
 
   function ShackSale() public 
@@ -195,11 +195,11 @@ contract ShackSale is Ownable, PausableCrowdsale(false), TokensCappedCrowdsale(S
     token.transferOwnership(owner);
   }
 
-  event BuyBackRateChange(uint256 rate);
+  event BuyBackRateChange(uint32 rate);
   event BuyBackTransfer(address indexed from, address indexed to, uint256 value);
   event ReturnBuyBack(address indexed from, address indexed to, uint256 value);
 
-  function setBuyBackRate(uint256 paramRate) public onlyOwner {
+  function setBuyBackRate(uint32 paramRate) public onlyOwner {
     require(paramRate >= 1);
     buyBackRate = paramRate;
     BuyBackRateChange(buyBackRate);
