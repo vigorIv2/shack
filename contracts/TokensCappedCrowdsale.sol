@@ -1,6 +1,7 @@
 pragma solidity ^0.4.11;
 
-import "zeppelin-solidity/contracts/crowdsale/Crowdsale.sol";
+// import "zeppelin-solidity/contracts/crowdsale/Crowdsale.sol";
+import "zeppelin-solidity/contracts/crowdsale/validation/TimedCrowdsale.sol";
 import "zeppelin-solidity/contracts/math/SafeMath.sol";
 
 /**
@@ -8,7 +9,7 @@ import "zeppelin-solidity/contracts/math/SafeMath.sol";
 * Based on references from OpenZeppelin: https://github.com/OpenZeppelin/zeppelin-solidity
 * 
 */
-contract TokensCappedCrowdsale is Crowdsale {
+contract TokensCappedCrowdsale is TimedCrowdsale {
     using SafeMath for uint256;
 
     uint256 tokensCap;
@@ -19,7 +20,8 @@ contract TokensCappedCrowdsale is Crowdsale {
 
     function calcTokens(uint256 weiAmount) internal constant returns(uint256) {
       // calculate token amount to be created
-      uint256 tokens = weiAmount.div(100).mul(rate).div(1 ether).mul(10**6);
+//      uint256 tokens = weiAmount.div(100).mul(rate).div(1 ether).mul(10**6);
+      uint256 tokens = weiAmount.mul(rate).mul(10**6).div(1 ether).div(100);
       uint256 tokensLeft = tokensCap.sub(token.totalSupply());
       if ( tokensLeft < tokens ) {
         tokens = tokensLeft;
@@ -29,18 +31,19 @@ contract TokensCappedCrowdsale is Crowdsale {
     
     // overriding Crowdsale#validPurchase to add extra tokens cap logic
     // @return true if investors can buy at the moment
-    function validPurchase() internal constant returns(bool) {
+    function validPurchase() internal view returns(bool) {
       uint256 tokens = token.totalSupply().add(calcTokens(msg.value));
 
       bool withinCap = tokens <= tokensCap;
-      return super.validPurchase() && withinCap;
+//      super._preValidatePurchase(msg.sender, msg.value) ; // it would throw exception if invalid purchase
+      return withinCap;
     }
 
     // overriding Crowdsale#hasEnded to add tokens cap logic
     // @return true if crowdsale event has ended
-    function hasEnded() public constant returns(bool) {
+    function hasClosed() public constant returns(bool) {
       bool capReached = token.totalSupply() >= tokensCap;
-      return super.hasEnded() || capReached;
+      return super.hasClosed() || capReached;
     }
 
 }

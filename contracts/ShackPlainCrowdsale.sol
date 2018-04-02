@@ -39,7 +39,7 @@ contract ShackPlainCrowdsale {
             balances[msg.sender] -= _value;
             balances[_to] += _value;
 
-            Transfer(msg.sender, _to, _value);
+            emit Transfer(msg.sender, _to, _value);
             return true;
         } else { return false; }
     }
@@ -63,7 +63,7 @@ contract ShackPlainCrowdsale {
 
             allowed[_from][msg.sender] -= _value;
 
-            Transfer(_from, _to, _value);
+            emit Transfer(_from, _to, _value);
             return true;
         } else { return false; }
     }
@@ -74,7 +74,7 @@ contract ShackPlainCrowdsale {
 
         allowed[msg.sender][_spender] = _value;
 
-        Approval(msg.sender, _spender, _value);
+        emit Approval(msg.sender, _spender, _value);
         return true;
     }
 
@@ -141,6 +141,6 @@ contract ShackPlainCrowdsale {
         totalSupply += tokensIssued;
         balances[msg.sender] += tokensIssued;
 
-        Transfer(address(this), msg.sender, tokensIssued);
+        emit Transfer(address(this), msg.sender, tokensIssued);
     }
 }

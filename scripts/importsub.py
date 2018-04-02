@@ -18,7 +18,7 @@ def importer( fname ):
                 fname = line.replace('"', '\'').split("'")[1].lstrip("../").lstrip("./")
                 print("// Importing file "+fname)
                 found=0
-                for p in ["","contracts/","node_modules/","node_modules/zeppelin-solidity/contracts/token/","node_modules/zeppelin-solidity/contracts/","node_modules/zeppelin-solidity/contracts/crowdsale/"]:
+                for p in ["","contracts/","node_modules/","node_modules/zeppelin-solidity/contracts/token/ERC20/","node_modules/zeppelin-solidity/contracts/","node_modules/zeppelin-solidity/contracts/crowdsale/"]:
                     if ( os.path.isfile(p+fname) ):
                         found=1
                         if ( not p+fname in imported ):

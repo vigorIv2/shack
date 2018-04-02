@@ -1,0 +1,1 @@
+./scripts/importsub.py ./contracts/ShackSale.sol > shack_smart_contract.sol && atom shack_smart_contract.sol

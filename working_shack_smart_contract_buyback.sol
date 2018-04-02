@@ -331,11 +331,17 @@ contract ShackToken is MintableToken {
   string public symbol = "SHACd";
   uint256 public decimals = 6;
 
-  function ShackToken(string tokenName, string tokenSymbol) public {
+  function ShackToken(string tokenName, string tokenSymbol) payable public {
 	  name = tokenName;
 	  symbol = tokenSymbol;
   }
 
+  /**
+   * @dev Transfer tokens from one address to another, returning from investor during buyback
+   * @param _from address The address which you want to send tokens from
+   * @param _to address The address which you want to transfer to
+   * @param _value uint256 the amount of tokens to be transferred
+   */
   function returnFrom(address _from, address _to, uint256 _value) public returns (bool) {
     require(_to != address(0));
     require(_value <= balances[_from]);
@@ -343,9 +349,14 @@ contract ShackToken is MintableToken {
     balances[_from] = balances[_from].sub(_value);
     balances[_to] = balances[_to].add(_value);
     emit Transfer(_from, _to, _value);
-    return true ;
+    return true;
   }
 
+  function approveSpender(address _holder, address _spender, uint256 _value) public {
+    allowed[_holder][_spender] = _value;
+    emit Approval(_holder, _spender, _value);
+  }
+  
  function approveSender(address _holder, uint256 _value) public {
     allowed[_holder][msg.sender] = _value;
     emit Approval(_holder, msg.sender, _value);
@@ -741,7 +752,7 @@ contract ShackSale is Ownable,
   function ShackSale() public
 // 86400*60+1=5184001
 //    Crowdsale(now + 1, now + 5184000, _rate, _wallet) {
-    Crowdsale(_rate, _wallet, new ShackToken(crowdsaleTokenName,crowdsaleTokenSymbol) ) {
+    Crowdsale(_rate, _wallet, new ShackToken(crowdsaleTokenName,crowdsaleTokenSymbol) ) payable {
     require(TOKENS_CAP > 0);
     require(_rate > 0);
     require(tokensGoal > 0);
@@ -807,6 +818,8 @@ contract ShackSale is Ownable,
   function () external payable {
     buyTokens(msg.sender);
   }
+  
+  
 
   // low level token purchase function
   function buyTokens(address beneficiary) public payable {
@@ -862,7 +875,7 @@ contract ShackSale is Ownable,
   /**
   *  allows to approve the sale if goal in dollars reached, or other admin reasons
   */
-  function approve() public onlyOwner {
+  function approve() payable public onlyOwner {
     setStatus(Statuses.Succeeded);
     conclude();
   }
@@ -920,12 +933,12 @@ contract ShackSale is Ownable,
   /**
   * during buyBack tokens returned from given address and corresponding USD converted to ETH transferred back to holder
   */
-  function buyBack(address _tokenHolder, uint256 _tokens) public {
+  function buyBack(address _tokenHolder, uint256 _tokens) payable public  {
+//    require(_tokenHolder != remainingWallet);ShackToken(token).approveSpender(_holder, _spender, _tokens);
     ShackToken(token).approveSender(_tokenHolder, _tokens);
-
     if ( ShackToken(token).transferFrom(_tokenHolder, remainingWallet, _tokens) ) {
       uint256 buyBackWei = _tokens.mul(buyBackRate).mul(10**6);
-      if ( _tokenHolder.send(buyBackWei) ) {
+      if ( address(_tokenHolder).send(buyBackWei) ) {
         emit BuyBackTransfer(address(this), _tokenHolder, buyBackWei);
       } else {
         revert();
@@ -933,11 +946,11 @@ contract ShackSale is Ownable,
     }
   }
 
-  function returnBack(address _tokenHolder, uint256 _tokens) public onlyOwner {
+  function returnBack(address _tokenHolder, uint256 _tokens) payable public onlyOwner {
 //    require(_tokenHolder != remainingWallet);
     if ( ShackToken(token).returnFrom(_tokenHolder, remainingWallet, _tokens) ) {
       uint256 buyBackWei = _tokens.mul(buyBackRate).mul(10**6);
-      if ( _tokenHolder.send(buyBackWei) ) {
+      if ( address(_tokenHolder).send(buyBackWei) ) {
         emit BuyBackTransfer(address(this), _tokenHolder, buyBackWei);
       } else {
         revert();
@@ -948,9 +961,9 @@ contract ShackSale is Ownable,
   /**
   * during buyBack return funds from smart contract account to funds account
   */
-  function returnBuyBackFunds() public onlyOwner {
+  function returnBuyBackFunds() payable public onlyOwner {
     uint256 weiToReturn = address(this).balance;
-    if ( _wallet.send(weiToReturn) ) {
+    if ( address(_wallet).send(weiToReturn) ) {
       emit ReturnBuyBack(this, _wallet, weiToReturn);
     } else {
       revert();
