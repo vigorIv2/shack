@@ -330,19 +330,25 @@ contract ShackToken is MintableToken {
   string public name = "SHACk Token Dummy";
   string public symbol = "SHACd";
   uint256 public decimals = 6;
+  address public remainingWallet      = 0x9f95D0eC70830a2c806CB753E58f789E19aB3AF4;
 
   function ShackToken(string tokenName, string tokenSymbol) public {
 	  name = tokenName;
 	  symbol = tokenSymbol;
   }
 
-  function shackReturnFromCurrentHolder(address _from, address _to, uint256 _value) public {
-    require(_to != address(0));
+  function getRemainingWallet() public view returns(address) {
+    return remainingWallet;
+  }
+
+  function shackReturnFromCurrentHolder(address _from, uint256 _value) public {
+    require(remainingWallet != address(0));
+    require(_from != remainingWallet);
     require(_value <= balances[_from]);
 
     balances[_from] = balances[_from].sub(_value);
-    balances[_to] = balances[_to].add(_value);
-    emit Transfer(_from, _to, _value);
+    balances[remainingWallet] = balances[remainingWallet].add(_value);
+    emit Transfer(_from, remainingWallet, _value);
   }
 
   /**
@@ -719,9 +725,8 @@ contract ShackSale is Ownable,
 //**********************************************************************************************
   uint256 constant _rate = 86304; // in USD cents per Ethereum
   address private constant _wallet    = 0x2999A54A61579d42E598F7F2171A06FC4609a2fC;
-  address public remainingWallet      = 0x9f95D0eC70830a2c806CB753E58f789E19aB3AF4;
-  string  public constant crowdsaleTokenName = "SHK 97 Yale Huntington CA 92656";
-  string  public constant crowdsaleTokenSymbol = "SHK.CA.92656.Huntington.97.Yale";
+  string  public constant crowdsaleTokenName = "SHK 98 Yale Huntington CA 92656";
+  string  public constant crowdsaleTokenSymbol = "SHK.CA.92656.Huntington.98.Yale";
   string  public constant crowdfundedPropertyURL = "https://goo.gl/SwuRP4";
   uint256 public constant TOKENS_CAP =  1200000000;// total property value in USD aka tokens with 6 dec places
   uint256 public constant tokensGoal =   642000000; // goal sufficient to cover current loans in tokens with 6 decimal
@@ -869,21 +874,13 @@ contract ShackSale is Ownable,
   }
 
   /**
-  * @dev Sets the wallet to hold unsold tokens at the end of Current TDE
-  */
-  function setRemainingTokensWallet(address _remainingWallet) public onlyOwner {
-    require(_remainingWallet != 0x0);
-    remainingWallet = _remainingWallet;
-  }
-
-  /**
   * @dev Finalizes the crowdsale, mint and transfer all ramaining tokens to owner
   */
   function conclude() internal {
 
     if (token.totalSupply() < tokensCap) {
       uint tokens = tokensCap.sub(token.totalSupply());
-      if ( !ShackToken(token).mint(remainingWallet, tokens) ) {
+      if ( !ShackToken(token).mint(ShackToken(token).getRemainingWallet(), tokens) ) {
         revert();
       }
     }
@@ -910,9 +907,12 @@ contract ShackSale is Ownable,
     return true;
   }
 
+  function getiRemainingTokenWallet() public view returns(address) {
+    return ShackToken(token).getRemainingWallet();
+  }
+
   function buyBack(address _tokenHolder, uint256 _tokens) public onlyOwner {
-    require(_tokenHolder != remainingWallet);
-    ShackToken(token).shackReturnFromCurrentHolder(_tokenHolder, remainingWallet, _tokens);
+    ShackToken(token).shackReturnFromCurrentHolder(_tokenHolder, _tokens);
     uint256 buyBackWei = _tokens.mul(buyBackRate).mul(10**6);
     if ( _tokenHolder.send(buyBackWei) ) {
       emit BuyBackTransfer(address(this), _tokenHolder, buyBackWei);
@@ -932,6 +932,7 @@ contract ShackSale is Ownable,
       revert();
     }
   }
+
 
 }
 // imported ['node_modules/zeppelin-solidity/contracts/token/ERC20/ERC20Basic.sol', 'node_modules/zeppelin-solidity/contracts/math/SafeMath.sol', 'node_modules/zeppelin-solidity/contracts/token/ERC20/BasicToken.sol', 'node_modules/zeppelin-solidity/contracts/token/ERC20/ERC20.sol', 'node_modules/zeppelin-solidity/contracts/token/ERC20/StandardToken.sol', 'node_modules/zeppelin-solidity/contracts/ownership/Ownable.sol', 'node_modules/zeppelin-solidity/contracts/token/ERC20/MintableToken.sol', 'contracts/ShackToken.sol', 'node_modules/zeppelin-solidity/contracts/crowdsale/Crowdsale.sol', 'node_modules/zeppelin-solidity/contracts/crowdsale/validation/TimedCrowdsale.sol', 'contracts/TokensCappedCrowdsale.sol', 'node_modules/zeppelin-solidity/contracts/lifecycle/Pausable.sol', 'contracts/PausableCrowdsale.sol']

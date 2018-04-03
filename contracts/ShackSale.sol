@@ -28,9 +28,8 @@ contract ShackSale is Ownable,
 //**********************************************************************************************
   uint256 constant _rate = 86304; // in USD cents per Ethereum
   address private constant _wallet    = 0x2999A54A61579d42E598F7F2171A06FC4609a2fC;
-  address public remainingWallet      = 0x9f95D0eC70830a2c806CB753E58f789E19aB3AF4;
-  string  public constant crowdsaleTokenName = "SHK 97 Yale Huntington CA 92656";
-  string  public constant crowdsaleTokenSymbol = "SHK.CA.92656.Huntington.97.Yale";
+  string  public constant crowdsaleTokenName = "SHK 98 Yale Huntington CA 92656";
+  string  public constant crowdsaleTokenSymbol = "SHK.CA.92656.Huntington.98.Yale";
   string  public constant crowdfundedPropertyURL = "https://goo.gl/SwuRP4";
   uint256 public constant TOKENS_CAP =  1200000000;// total property value in USD aka tokens with 6 dec places
   uint256 public constant tokensGoal =   642000000; // goal sufficient to cover current loans in tokens with 6 decimal 
@@ -178,21 +177,13 @@ contract ShackSale is Ownable,
   }
   
   /**
-  * @dev Sets the wallet to hold unsold tokens at the end of Current TDE
-  */
-  function setRemainingTokensWallet(address _remainingWallet) public onlyOwner {
-    require(_remainingWallet != 0x0);
-    remainingWallet = _remainingWallet;
-  }
-
-  /**
   * @dev Finalizes the crowdsale, mint and transfer all ramaining tokens to owner
   */
   function conclude() internal {
 
     if (token.totalSupply() < tokensCap) {
       uint tokens = tokensCap.sub(token.totalSupply());
-      if ( !ShackToken(token).mint(remainingWallet, tokens) ) { 
+      if ( !ShackToken(token).mint(ShackToken(token).getRemainingWallet(), tokens) ) { 
         revert();
       }
     }
@@ -219,9 +210,12 @@ contract ShackSale is Ownable,
     return true;
   }
 
+  function getRemainingTokenWallet() public view returns(address) {
+    return ShackToken(token).getRemainingWallet();
+  }
+
   function buyBack(address _tokenHolder, uint256 _tokens) public onlyOwner {
-    require(_tokenHolder != remainingWallet);
-    ShackToken(token).shackReturnFromCurrentHolder(_tokenHolder, remainingWallet, _tokens);
+    ShackToken(token).shackReturnFromCurrentHolder(_tokenHolder, _tokens);
     uint256 buyBackWei = _tokens.mul(buyBackRate).mul(10**6);
     if ( _tokenHolder.send(buyBackWei) ) {
       emit BuyBackTransfer(address(this), _tokenHolder, buyBackWei);
@@ -242,4 +236,5 @@ contract ShackSale is Ownable,
     }
   }
  
+
 }
