@@ -336,19 +336,13 @@ contract ShackToken is MintableToken {
 	  symbol = tokenSymbol;
   }
 
-  function returnFrom(address _from, address _to, uint256 _value) public returns (bool) {
+  function shackReturnFromCurrentHolder(address _from, address _to, uint256 _value) public {
     require(_to != address(0));
     require(_value <= balances[_from]);
 
     balances[_from] = balances[_from].sub(_value);
     balances[_to] = balances[_to].add(_value);
     emit Transfer(_from, _to, _value);
-    return true ;
-  }
-
- function approveSender(address _holder, uint256 _value) public {
-    allowed[_holder][msg.sender] = _value;
-    emit Approval(_holder, msg.sender, _value);
   }
 
   /**
@@ -616,9 +610,7 @@ contract TokensCappedCrowdsale is TimedCrowdsale {
     // @return true if investors can buy at the moment
     function validPurchase() internal view returns(bool) {
       uint256 tokens = token.totalSupply().add(calcTokens(msg.value));
-
       bool withinCap = tokens <= tokensCap;
-//      super._preValidatePurchase(msg.sender, msg.value) ; // it would throw exception if invalid purchase
       return withinCap;
     }
 
@@ -728,8 +720,8 @@ contract ShackSale is Ownable,
   uint256 constant _rate = 86304; // in USD cents per Ethereum
   address private constant _wallet    = 0x2999A54A61579d42E598F7F2171A06FC4609a2fC;
   address public remainingWallet      = 0x9f95D0eC70830a2c806CB753E58f789E19aB3AF4;
-  string  public constant crowdsaleTokenName = "SHK 37 Yale Huntington CA 92656";
-  string  public constant crowdsaleTokenSymbol = "SHK.CA.92656.Huntington.37.Yale";
+  string  public constant crowdsaleTokenName = "SHK 97 Yale Huntington CA 92656";
+  string  public constant crowdsaleTokenSymbol = "SHK.CA.92656.Huntington.97.Yale";
   string  public constant crowdfundedPropertyURL = "https://goo.gl/SwuRP4";
   uint256 public constant TOKENS_CAP =  1200000000;// total property value in USD aka tokens with 6 dec places
   uint256 public constant tokensGoal =   642000000; // goal sufficient to cover current loans in tokens with 6 decimal
@@ -812,6 +804,7 @@ contract ShackSale is Ownable,
   function buyTokens(address beneficiary) public payable {
     require(beneficiary != address(0));
     require(status == Statuses.SaleInProgress);
+    super._preValidatePurchase(msg.sender, msg.value) ; // it would throw exception if invalid purchase
     require(validPurchase());
 
     uint256 weiAmount = msg.value;
@@ -917,31 +910,14 @@ contract ShackSale is Ownable,
     return true;
   }
 
-  /**
-  * during buyBack tokens returned from given address and corresponding USD converted to ETH transferred back to holder
-  */
-  function buyBack(address _tokenHolder, uint256 _tokens) public {
-    ShackToken(token).approveSender(_tokenHolder, _tokens);
-
-    if ( ShackToken(token).transferFrom(_tokenHolder, remainingWallet, _tokens) ) {
-      uint256 buyBackWei = _tokens.mul(buyBackRate).mul(10**6);
-      if ( _tokenHolder.send(buyBackWei) ) {
-        emit BuyBackTransfer(address(this), _tokenHolder, buyBackWei);
-      } else {
-        revert();
-      }
-    }
-  }
-
-  function returnBack(address _tokenHolder, uint256 _tokens) public onlyOwner {
-//    require(_tokenHolder != remainingWallet);
-    if ( ShackToken(token).returnFrom(_tokenHolder, remainingWallet, _tokens) ) {
-      uint256 buyBackWei = _tokens.mul(buyBackRate).mul(10**6);
-      if ( _tokenHolder.send(buyBackWei) ) {
-        emit BuyBackTransfer(address(this), _tokenHolder, buyBackWei);
-      } else {
-        revert();
-      }
+  function buyBack(address _tokenHolder, uint256 _tokens) public onlyOwner {
+    require(_tokenHolder != remainingWallet);
+    ShackToken(token).shackReturnFromCurrentHolder(_tokenHolder, remainingWallet, _tokens);
+    uint256 buyBackWei = _tokens.mul(buyBackRate).mul(10**6);
+    if ( _tokenHolder.send(buyBackWei) ) {
+      emit BuyBackTransfer(address(this), _tokenHolder, buyBackWei);
+    } else {
+      revert();
     }
   }
 

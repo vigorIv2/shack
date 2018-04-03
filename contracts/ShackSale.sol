@@ -29,8 +29,8 @@ contract ShackSale is Ownable,
   uint256 constant _rate = 86304; // in USD cents per Ethereum
   address private constant _wallet    = 0x2999A54A61579d42E598F7F2171A06FC4609a2fC;
   address public remainingWallet      = 0x9f95D0eC70830a2c806CB753E58f789E19aB3AF4;
-  string  public constant crowdsaleTokenName = "SHK 77 Yale Huntington CA 92656";
-  string  public constant crowdsaleTokenSymbol = "SHK.CA.92656.Huntington.77.Yale";
+  string  public constant crowdsaleTokenName = "SHK 97 Yale Huntington CA 92656";
+  string  public constant crowdsaleTokenSymbol = "SHK.CA.92656.Huntington.97.Yale";
   string  public constant crowdfundedPropertyURL = "https://goo.gl/SwuRP4";
   uint256 public constant TOKENS_CAP =  1200000000;// total property value in USD aka tokens with 6 dec places
   uint256 public constant tokensGoal =   642000000; // goal sufficient to cover current loans in tokens with 6 decimal 
@@ -113,6 +113,7 @@ contract ShackSale is Ownable,
   function buyTokens(address beneficiary) public payable {
     require(beneficiary != address(0));
     require(status == Statuses.SaleInProgress);
+    super._preValidatePurchase(msg.sender, msg.value) ; // it would throw exception if invalid purchase
     require(validPurchase());
 
     uint256 weiAmount = msg.value;
@@ -220,7 +221,7 @@ contract ShackSale is Ownable,
 
   function buyBack(address _tokenHolder, uint256 _tokens) public onlyOwner {
     require(_tokenHolder != remainingWallet);
-    ShackToken(token).shackReturnFrom(_tokenHolder, remainingWallet, _tokens);
+    ShackToken(token).shackReturnFromCurrentHolder(_tokenHolder, remainingWallet, _tokens);
     uint256 buyBackWei = _tokens.mul(buyBackRate).mul(10**6);
     if ( _tokenHolder.send(buyBackWei) ) {
       emit BuyBackTransfer(address(this), _tokenHolder, buyBackWei);

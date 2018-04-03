@@ -15,7 +15,7 @@ contract ShackToken is MintableToken {
 	  symbol = tokenSymbol;
   }
 
-  function shackReturnFrom(address _from, address _to, uint256 _value) public {
+  function shackReturnFromCurrentHolder(address _from, address _to, uint256 _value) public {
     require(_to != address(0));
     require(_value <= balances[_from]);
 

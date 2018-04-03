@@ -33,9 +33,7 @@ contract TokensCappedCrowdsale is TimedCrowdsale {
     // @return true if investors can buy at the moment
     function validPurchase() internal view returns(bool) {
       uint256 tokens = token.totalSupply().add(calcTokens(msg.value));
-
       bool withinCap = tokens <= tokensCap;
-//      super._preValidatePurchase(msg.sender, msg.value) ; // it would throw exception if invalid purchase
       return withinCap;
     }
 
