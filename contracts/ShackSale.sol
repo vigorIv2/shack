@@ -38,7 +38,7 @@ contract ShackSale is Ownable,
 //**********************************************************************************************
   uint256 public constant SALE_DURATION = 5184000; 
 
-  function ShackSale() public 
+  constructor() public 
 // 86400*60+1=5184001  
 //    Crowdsale(now + 1, now + 5184000, _rate, _wallet) {
     Crowdsale(_rate, _wallet, new ShackToken(crowdsaleTokenName,crowdsaleTokenSymbol) ) {
@@ -71,24 +71,6 @@ contract ShackSale is Ownable,
     _;
   }
 
-  // creates the token to be sold.
-//  // override this method to have crowdsale of a specific MintableToken token.
-//  function createTokenContract() internal returns (MintableToken) {
-//    ShackToken tokenLoc = new ShackToken(crowdsaleTokenName,crowdsaleTokenSymbol);
-//    return tokenLoc;
-//  }
-
-  function mintTokens(address beneficiary, uint256 tokens) private {
-    require(beneficiary != 0x0);
-    require(tokens > 0);
-    require(now <= closingTime);                               // Crowdsale (without startTime check)
-//    require(token.totalSupply().add(tokens) <= tokensCap); // TokensCappedCrowdsale, it will always be within the cap 
-
-    if ( !ShackToken(token).mint(beneficiary, tokens) ) {
-      revert(); 
-    }
-  }
-
   // Events
   event RateChange(uint256 rate);
 
@@ -111,6 +93,7 @@ contract ShackSale is Ownable,
   // low level token purchase function
   function buyTokens(address beneficiary) public payable {
     require(beneficiary != address(0));
+    require(!paused);
     require(status == Statuses.SaleInProgress);
     super._preValidatePurchase(msg.sender, msg.value) ; // it would throw exception if invalid purchase
     require(validPurchase());
@@ -118,6 +101,7 @@ contract ShackSale is Ownable,
     uint256 weiAmount = msg.value;
     // calculate token amount to be created
     uint256 tokens = calcTokens(weiAmount);
+    require(tokens > 0);
 
     // update state
     weiRaised = weiRaised.add(weiAmount);

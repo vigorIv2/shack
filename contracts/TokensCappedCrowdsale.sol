@@ -14,7 +14,7 @@ contract TokensCappedCrowdsale is TimedCrowdsale {
 
     uint256 tokensCap;
 
-    function TokensCappedCrowdsale(uint256 _tokensCap) public {
+    constructor(uint256 _tokensCap) public {
       tokensCap = _tokensCap;
     }
 

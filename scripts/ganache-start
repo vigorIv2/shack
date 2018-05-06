@@ -4,4 +4,4 @@ ganache-cli \
   --verbose \
   --networkId=5777 \
   --gasLimit=7984452 \
-  --gasPrice=2000000000;
+  --gasPrice=2000000000 | tee -a ganache-cli.log

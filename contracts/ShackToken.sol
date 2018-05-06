@@ -11,7 +11,7 @@ contract ShackToken is MintableToken {
   uint256 public decimals = 6;
   address private constant remainingWallet      = 0x9f95D0eC70830a2c806CB753E58f789E19aB3AF4;
 
-  function ShackToken(string tokenName, string tokenSymbol) public {
+  constructor(string tokenName, string tokenSymbol) public {
 	  name = tokenName;
 	  symbol = tokenSymbol;
   }

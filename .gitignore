@@ -1,5 +1,8 @@
 build/
 node_modules/
 bak/
+project/
+target/
+test/
 .DS_Store
 .env

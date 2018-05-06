@@ -330,14 +330,14 @@ contract ShackToken is MintableToken {
   string public name = "SHACk Token Dummy";
   string public symbol = "SHACd";
   uint256 public decimals = 6;
-  address public remainingWallet      = 0x9f95D0eC70830a2c806CB753E58f789E19aB3AF4;
+  address private constant remainingWallet      = 0x9f95D0eC70830a2c806CB753E58f789E19aB3AF4;
 
   function ShackToken(string tokenName, string tokenSymbol) public {
 	  name = tokenName;
 	  symbol = tokenSymbol;
   }
 
-  function getRemainingWallet() public view returns(address) {
+  function getRemainingWallet() public pure returns(address) {
     return remainingWallet;
   }
 
@@ -907,7 +907,7 @@ contract ShackSale is Ownable,
     return true;
   }
 
-  function getiRemainingTokenWallet() public view returns(address) {
+  function getRemainingTokenWallet() public view returns(address) {
     return ShackToken(token).getRemainingWallet();
   }
 
